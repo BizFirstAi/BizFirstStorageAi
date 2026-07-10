@@ -1,0 +1,27 @@
+read C:\BizFirstGO_FI_AI\Documentation\UserGuides\Guideline
+
+read design: C:\BizFirstGO_FI_AI\Documentation\Projects\Storage
+
+
+
+Read examples
+C:\BizFirstGO_FI_AI\UserGuides\docs\WebSites\BizExpressions
+C:\BizFirstGO_FI_AI\UserGuides\docs\WebSites\NodeExpressionEngine
+ 
+
+Also create a new Guide for this. 
+Elaborate and many pages
+
+Talk about use cases
+
+getting started
+how to setup
+how to maintain
+Talk about every process make seperate sections and subpage for all areas such as Backup
+
+lot of pages.
+
+This is public facing and be usecase oriented and tak about business cases and usecases and different scenarios etc
+
+
+Create the guide under C:\BizFirstGO_FI_AI\UserGuides\docs\WebSites\InfraHub
