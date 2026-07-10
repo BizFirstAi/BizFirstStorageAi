@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BizFirst Storage V1 - Enterprise File Storage Platform</title>
+    <title>BizFirst Storage V1</title>
     <style>
         * {
             margin: 0;
@@ -17,17 +17,9 @@
             --surface: #1e293b;
             --surface-light: #334155;
             --accent: #3b82f6;
-            --accent-hover: #2563eb;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --error: #ef4444;
             --text-primary: #f1f5f9;
             --text-secondary: #cbd5e1;
             --border: #475569;
-        }
-
-        html {
-            scroll-behavior: smooth;
         }
 
         body {
@@ -37,153 +29,78 @@
             line-height: 1.6;
         }
 
-        /* Navigation */
-        nav {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(15, 23, 42, 0.98);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border);
-            z-index: 1000;
-            padding: 1rem 2rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .nav-container {
-            max-width: 1600px;
-            margin: 0 auto;
+        .container {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            min-height: 100vh;
         }
 
-        .logo {
+        /* SIDEBAR MENU */
+        .sidebar {
+            width: 250px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem 0;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar-logo {
+            padding: 0 1.5rem;
+            margin-bottom: 2rem;
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            font-size: 1.25rem;
-            font-weight: bold;
-            cursor: pointer;
         }
 
-        .logo img {
+        .sidebar-logo img {
             height: 40px;
             width: auto;
         }
 
-        .logo span {
-            background: linear-gradient(135deg, var(--accent) 0%, #60a5fa 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .sidebar-logo span {
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 1rem;
         }
 
-        .nav-links {
-            display: flex;
-            gap: 0.5rem;
+        .sidebar-menu {
             list-style: none;
-            flex-wrap: wrap;
-            justify-content: flex-end;
         }
 
-        .nav-links a {
+        .sidebar-menu li {
+            margin: 0;
+        }
+
+        .sidebar-menu a {
+            display: block;
+            padding: 0.75rem 1.5rem;
             color: var(--text-secondary);
             text-decoration: none;
             cursor: pointer;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
             transition: all 0.3s ease;
-            font-size: 0.95rem;
+            border-left: 3px solid transparent;
         }
 
-        .nav-links a:hover {
+        .sidebar-menu a:hover {
             background: rgba(59, 130, 246, 0.1);
             color: var(--accent);
+            border-left-color: var(--accent);
         }
 
-        .search-container {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .search-box {
-            padding: 0.5rem 1rem;
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid var(--border);
-            border-radius: 0.5rem;
-            color: var(--text-primary);
-            width: 200px;
-            font-size: 0.9rem;
-        }
-
-        .search-box::placeholder {
-            color: var(--text-secondary);
-        }
-
-        .search-box:focus {
-            outline: none;
-            background: rgba(59, 130, 246, 0.2);
-            border-color: var(--accent);
-        }
-
-        .external-link {
-            color: var(--text-secondary);
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            transition: all 0.3s ease;
-            font-size: 0.95rem;
-        }
-
-        .external-link:hover {
-            background: rgba(59, 130, 246, 0.1);
+        .sidebar-menu a.active {
+            background: rgba(59, 130, 246, 0.15);
             color: var(--accent);
+            border-left-color: var(--accent);
         }
 
-        .search-suggestions {
-            display: none;
-            position: absolute;
-            top: 70px;
-            right: 2rem;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            z-index: 999;
-            min-width: 250px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .search-suggestions.active {
-            display: block;
-        }
-
-        .search-suggestions a {
-            display: block;
-            padding: 0.75rem 1rem;
-            color: var(--text-secondary);
-            text-decoration: none;
-            border-bottom: 1px solid var(--border);
-            transition: all 0.2s ease;
-        }
-
-        .search-suggestions a:last-child {
-            border-bottom: none;
-        }
-
-        .search-suggestions a:hover {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--accent);
-            padding-left: 1.5rem;
-        }
-
-        /* Main Content */
-        main {
-            margin-top: 80px;
-            max-width: 1600px;
-            margin-left: auto;
-            margin-right: auto;
+        /* MAIN CONTENT */
+        .main-content {
+            margin-left: 250px;
+            flex: 1;
             padding: 2rem;
         }
 
@@ -197,114 +114,80 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        /* Hero Section */
-        .hero {
-            text-align: center;
-            padding: 4rem 2rem;
-            margin-bottom: 4rem;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
-            border-radius: 1rem;
-            border: 1px solid var(--border);
-        }
-
-        .hero h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, var(--accent) 0%, #60a5fa 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero p {
-            font-size: 1.25rem;
-            color: var(--text-secondary);
+        /* HEADER */
+        .page-header {
             margin-bottom: 2rem;
-            max-width: 900px;
-            margin-left: auto;
-            margin-right: auto;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border);
         }
 
-        /* Cards Grid */
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin: 2rem 0;
-        }
-
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            padding: 2rem;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .card:hover {
-            background: var(--surface-light);
-            border-color: var(--accent);
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
-        }
-
-        .card h3 {
+        .page-header h1 {
             color: var(--accent);
-            margin-bottom: 1rem;
-            font-size: 1.25rem;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
         }
 
-        .card p {
+        .page-header p {
             color: var(--text-secondary);
             font-size: 0.95rem;
         }
 
-        /* Sections */
+        /* SECTIONS */
         section {
-            margin: 3rem 0;
-            padding: 2.5rem;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
         }
 
         section h2 {
             color: var(--accent);
-            font-size: 2.2rem;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid var(--border);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
         }
 
         section h3 {
             color: var(--text-primary);
-            font-size: 1.5rem;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        section h4 {
-            color: var(--text-primary);
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             margin-top: 1.5rem;
             margin-bottom: 0.75rem;
         }
 
-        /* Tables */
+        section p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* LISTS */
+        ul, ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+            line-height: 1.7;
+        }
+
+        /* TABLES */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 1.5rem 0;
+            margin: 1rem 0;
             font-size: 0.95rem;
         }
 
         th, td {
-            padding: 1rem;
+            padding: 0.75rem;
             text-align: left;
             border-bottom: 1px solid var(--border);
         }
@@ -319,220 +202,124 @@
             background: rgba(59, 130, 246, 0.05);
         }
 
-        /* Code blocks */
+        /* CODE BLOCKS */
         pre {
             background: var(--bg-dark);
             border: 1px solid var(--border);
             border-radius: 0.5rem;
-            padding: 1.5rem;
+            padding: 1rem;
             overflow-x: auto;
-            margin: 1.5rem 0;
-            font-size: 0.9rem;
+            margin: 1rem 0;
+            font-size: 0.85rem;
         }
 
         code {
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            color: var(--text-primary);
+            color: #60a5fa;
         }
 
-        /* Lists */
-        ul, ol {
-            margin: 1rem 0 1rem 2rem;
-            color: var(--text-secondary);
-        }
-
-        li {
-            margin: 0.75rem 0;
-            line-height: 1.8;
-        }
-
-        /* Features */
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-
-        .feature {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .feature-icon {
-            width: 50px;
-            height: 50px;
-            flex-shrink: 0;
-            background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%);
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.5rem;
-        }
-
-        .feature-content h4 {
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .feature-content p {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-        }
-
-        /* Metrics */
-        .metrics {
+        /* FEATURE GRID */
+        .feature-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0;
+            gap: 1rem;
+            margin: 1.5rem 0;
         }
 
-        .metric {
+        .feature-item {
             background: var(--bg-dark);
-            padding: 1.5rem;
-            border-radius: 0.75rem;
             border: 1px solid var(--border);
+            padding: 1rem;
+            border-radius: 0.5rem;
             text-align: center;
         }
 
-        .metric-value {
-            font-size: 2rem;
+        .feature-item strong {
+            display: block;
             color: var(--accent);
-            font-weight: bold;
             margin-bottom: 0.5rem;
         }
 
-        .metric-label {
-            color: var(--text-secondary);
+        .feature-item p {
             font-size: 0.9rem;
+            color: var(--text-secondary);
         }
 
-        /* Alert boxes */
+        /* ALERT BOXES */
         .alert {
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            margin: 1.5rem 0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
             border-left: 4px solid;
         }
 
         .alert-info {
             background: rgba(59, 130, 246, 0.1);
             border-left-color: var(--accent);
-            color: var(--text-primary);
-        }
-
-        .alert-warning {
-            background: rgba(245, 158, 11, 0.1);
-            border-left-color: var(--warning);
-            color: var(--text-primary);
         }
 
         .alert-success {
             background: rgba(16, 185, 129, 0.1);
-            border-left-color: var(--success);
+            border-left-color: #10b981;
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-left-color: #f59e0b;
+        }
+
+        /* MOBILE MENU TOGGLE */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
             color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 1rem;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 200;
         }
 
-        .alert-danger {
-            background: rgba(239, 68, 68, 0.1);
-            border-left-color: var(--error);
-            color: var(--text-primary);
-        }
-
-        /* Persona Card */
-        .persona-card {
-            background: var(--bg-dark);
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            padding: 2rem;
-            margin: 1.5rem 0;
-        }
-
-        .persona-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .persona-icon {
-            width: 60px;
-            height: 60px;
-            background: var(--accent);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-        }
-
-        .persona-name {
-            flex: 1;
-        }
-
-        .persona-name h4 {
-            color: var(--text-primary);
-            margin-bottom: 0.25rem;
-        }
-
-        .persona-name p {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        /* Use Case Box */
-        .usecase-box {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--accent);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-        }
-
-        .usecase-box h4 {
-            color: var(--accent);
-            margin-bottom: 1rem;
-        }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            padding: 3rem 2rem;
-            color: var(--text-secondary);
-            border-top: 1px solid var(--border);
-            margin-top: 4rem;
-            background: var(--surface);
-        }
-
-        /* Responsive */
+        /* RESPONSIVE */
         @media (max-width: 768px) {
-            .nav-links {
-                gap: 0.25rem;
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
             }
 
-            .nav-links a {
-                padding: 0.5rem 0.75rem;
-                font-size: 0.85rem;
+            .sidebar.active {
+                transform: translateX(0);
             }
 
-            .hero h1 {
-                font-size: 2rem;
-            }
-
-            .hero {
-                padding: 2rem 1rem;
-            }
-
-            main {
+            .main-content {
+                margin-left: 0;
                 padding: 1rem;
+                padding-top: 4rem;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .page-header h1 {
+                font-size: 1.5rem;
             }
 
             section {
-                padding: 1.5rem;
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            section h2 {
+                font-size: 1.2rem;
+            }
+
+            section h3 {
+                font-size: 1rem;
             }
 
             table {
@@ -540,1404 +327,612 @@
             }
 
             th, td {
+                padding: 0.5rem;
+            }
+
+            pre {
+                font-size: 0.8rem;
                 padding: 0.75rem;
             }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 100%;
+            }
+
+            .sidebar-logo {
+                padding: 1rem;
+            }
+
+            .main-content {
+                padding: 1rem 0.75rem;
+            }
+
+            section {
+                padding: 0.75rem;
+            }
+
+            section h2 {
+                font-size: 1.1rem;
+            }
+
+            .page-header h1 {
+                font-size: 1.3rem;
+            }
+
+            table {
+                font-size: 0.8rem;
+            }
+
+            th, td {
+                padding: 0.4rem;
+            }
+        }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav>
-        <div class="nav-container">
-            <div class="logo" onclick="showPage('home')">
-                <img src="https://www.bizfirstai.com/website/assets/Logo/logo.png" alt="BizFirst Logo">
-                <span>Storage V1</span>
-            </div>
-            <ul class="nav-links">
-                <li><a onclick="showPage('home')">Home</a></li>
-                <li><a onclick="showPage('overview')">Overview</a></li>
-                <li><a onclick="showPage('usecases')">Use Cases</a></li>
-                <li><a onclick="showPage('personas')">Personas</a></li>
-                <li><a onclick="showPage('architecture')">Architecture</a></li>
-                <li><a onclick="showPage('api')">API</a></li>
-                <li><a onclick="showPage('operations')">Operations</a></li>
-                <li><a onclick="showPage('deployment')">Deploy</a></li>
-                <li><a onclick="showPage('bestpractices')">Best Practices</a></li>
-                <li><a onclick="showPage('faq')">FAQ</a></li>
-                <li><a href="https://www.bizfirstai.com" target="_blank" class="external-link">BizFirstAI.com</a></li>
-                <li><a href="https://docs.bizfirstai.com" target="_blank" class="external-link">Docs</a></li>
-                <li>
-                    <div class="search-container" style="position: relative;">
-                        <input type="text" id="searchBox" class="search-box" placeholder="Search docs..." onkeydown="handleSearch(event)">
-                        <div id="searchSuggestions" class="search-suggestions">
-                            <a href="https://docs.bizfirstai.com/search?q=s3" target="_blank">🔍 Search for S3</a>
-                            <a href="https://docs.bizfirstai.com/search?q=minIO" target="_blank">🔍 Search for MinIO</a>
-                            <a href="https://docs.bizfirstai.com/search?q=storage" target="_blank">🔍 Search for Storage</a>
-                            <a href="https://docs.bizfirstai.com/search?q=backup" target="_blank">🔍 Search for Backup</a>
-                            <a href="https://docs.bizfirstai.com/search?q=deployment" target="_blank">🔍 Search for Deployment</a>
-                            <a href="https://docs.bizfirstai.com/search?q=api" target="_blank">🔍 Search for API</a>
-                            <a href="https://docs.bizfirstai.com/search?q=tenant%20isolation" target="_blank">🔍 Search for Tenant Isolation</a>
-                            <a href="https://docs.bizfirstai.com/search?q=deduplication" target="_blank">🔍 Search for Deduplication</a>
-                        </div>
-                    </div>
-                </li>
-            </ul>
-        </div>
-    </nav>
+    <!-- MENU TOGGLE BUTTON -->
+    <button class="menu-toggle" onclick="toggleMenu()">☰</button>
 
-    <main>
-        <!-- Home Page -->
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <img src="https://www.bizfirstai.com/website/assets/Logo/logo.png" alt="Logo">
+            <span>Storage V1</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a onclick="showPage('home')" class="active">Home</a></li>
+            <li><a onclick="showPage('overview')">Overview</a></li>
+            <li><a onclick="showPage('features')">Features</a></li>
+            <li><a onclick="showPage('usecases')">Use Cases</a></li>
+            <li><a onclick="showPage('api')">API</a></li>
+            <li><a onclick="showPage('deployment')">Deployment</a></li>
+            <li><a onclick="showPage('monitoring')">Monitoring</a></li>
+            <li><a onclick="showPage('faq')">FAQ</a></li>
+            <li><a href="https://www.bizfirstai.com" target="_blank">BizFirstAI.com</a></li>
+            <li><a href="https://docs.bizfirstai.com" target="_blank">Docs</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+        <!-- HOME PAGE -->
         <div id="home" class="page active">
-            <div class="hero">
+            <div class="page-header">
                 <h1>BizFirst Storage V1</h1>
-                <p>Enterprise-grade file storage platform with content-addressable deduplication, tenant isolation, and built-in redundancy</p>
-                <p style="font-size: 1rem; margin-top: 2rem; color: var(--text-secondary);">Store once. Reference forever. Never duplicate.</p>
+                <p>Enterprise file storage with content-addressable deduplication</p>
             </div>
 
             <section>
-                <h2>Welcome to BizFirst Storage V1</h2>
-                <p style="font-size: 1.05rem; margin-bottom: 1.5rem;">
-                    Storage V1 is the central file storage backbone for the entire BizFirst platform. It provides a unified, secure, and efficient way to manage files across all applications and workflows—from AI function outputs to payroll documents to user uploads.
-                </p>
+                <h2>Welcome</h2>
+                <p>Storage V1 is the central file storage system for BizFirst. It provides:</p>
+                <ul>
+                    <li><strong>Content-Addressable Storage:</strong> Files stored once by SHA-256 hash</li>
+                    <li><strong>Tenant Isolation:</strong> Complete data separation per tenant</li>
+                    <li><strong>Automatic Deduplication:</strong> Same file = saved once per tenant</li>
+                    <li><strong>Multiple Backends:</strong> MinIO, AWS S3, Cloudflare R2, Backblaze B2</li>
+                    <li><strong>Built-in Backup:</strong> Daily restic snapshots to Backblaze B2</li>
+                    <li><strong>Logging Safe:</strong> Raw bytes never logged</li>
+                </ul>
+            </section>
 
-                <div class="features">
-                    <div class="feature">
-                        <div class="feature-icon">🔐</div>
-                        <div class="feature-content">
-                            <h4>Tenant-Isolated</h4>
-                            <p>Complete data isolation per tenant with automatic context resolution. Cross-tenant access is cryptographically impossible.</p>
-                        </div>
+            <section>
+                <h2>Key Statistics</h2>
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <strong>30%</strong>
+                        <p>Storage savings via dedup</p>
                     </div>
-                    <div class="feature">
-                        <div class="feature-icon">♻️</div>
-                        <div class="feature-content">
-                            <h4>Content-Addressable</h4>
-                            <p>Files stored once by SHA-256 hash. Identical files uploaded by different users consume storage exactly once.</p>
-                        </div>
+                    <div class="feature-item">
+                        <strong>4</strong>
+                        <p>Supported storage backends</p>
                     </div>
-                    <div class="feature">
-                        <div class="feature-icon">🚀</div>
-                        <div class="feature-content">
-                            <h4>Backend Agnostic</h4>
-                            <p>Same code runs on MinIO (self-hosted), AWS S3, Cloudflare R2, or Backblaze B2. Switch backends with configuration only.</p>
-                        </div>
+                    <div class="feature-item">
+                        <strong>12 months</strong>
+                        <p>Backup retention</p>
                     </div>
-                    <div class="feature">
-                        <div class="feature-icon">🛡️</div>
-                        <div class="feature-content">
-                            <h4>Built-in Security</h4>
-                            <p>Raw bytes never logged. Automatic encryption in transit. Optional tenant-ID prepending prevents cross-tenant inference.</p>
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">⚡</div>
-                        <div class="feature-content">
-                            <h4>High Performance</h4>
-                            <p>Streaming uploads/downloads. Zero-copy operations. Deduplication prevents redundant storage and network transfers.</p>
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">📊</div>
-                        <div class="feature-content">
-                            <h4>Observable</h4>
-                            <p>Prometheus metrics, health checks, and disk capacity monitoring. Automatic write-stop at configurable threshold.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin: 3rem 0; padding: 2rem; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); border-radius: 1rem; border: 1px solid var(--border);">
-                    <h3 style="margin-top: 0;">Quick Statistics</h3>
-                    <div class="metrics">
-                        <div class="metric">
-                            <div class="metric-value">24</div>
-                            <div class="metric-label">API Methods</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-value">100%</div>
-                            <div class="metric-label">Tenant Isolation</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-value">~30%</div>
-                            <div class="metric-label">Storage Savings via Dedup</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-value">4</div>
-                            <div class="metric-label">Supported Backends</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-value">99.999999%</div>
-                            <div class="metric-label">B2 Durability</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-value">0.006/GB</div>
-                            <div class="metric-label">Backup Cost</div>
-                        </div>
+                    <div class="feature-item">
+                        <strong>99.999999%</strong>
+                        <p>Durability (B2)</p>
                     </div>
                 </div>
             </section>
 
             <section>
-                <h2>Core Concepts at a Glance</h2>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
-                    <div style="background: var(--bg-dark); padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border);">
-                        <h4 style="color: var(--accent); margin-bottom: 0.75rem;">Content Addressable ID (CID)</h4>
-                        <p style="color: var(--text-secondary); font-size: 0.95rem;">Every file is identified by its SHA-256 hash. Same bytes → same CID → stored once. No filenames, no paths, just content.</p>
-                    </div>
-                    <div style="background: var(--bg-dark); padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border);">
-                        <h4 style="color: var(--accent); margin-bottom: 0.75rem;">Tenant Partitioning</h4>
-                        <p style="color: var(--text-secondary); font-size: 0.95rem;">Storage key format: tenant_{ID}/{CID}. TenantID resolved automatically from request context. Zero configuration for callers.</p>
-                    </div>
-                    <div style="background: var(--bg-dark); padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border);">
-                        <h4 style="color: var(--accent); margin-bottom: 0.75rem;">Automatic Deduplication</h4>
-                        <p style="color: var(--text-secondary); font-size: 0.95rem;">Upload same file twice → stored once per tenant. Write skipped on duplicate. Caller gets same CID back instantly.</p>
-                    </div>
-                    <div style="background: var(--bg-dark); padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border);">
-                        <h4 style="color: var(--accent); margin-bottom: 0.75rem;">Point-in-Time Restore</h4>
-                        <p style="color: var(--text-secondary); font-size: 0.95rem;">Daily restic snapshots to Backblaze B2. Restore any file from any day in the last 12 months. Encryption built-in.</p>
-                    </div>
-                </div>
+                <h2>Quick Start</h2>
+                <p><strong>For Developers:</strong></p>
+                <pre><code>var cid = await _storage.StoreAsync(stream, "file.pdf");
+var data = await _storage.GetStreamAsync(cid);
+var exists = await _storage.ExistsAsync(cid);</code></pre>
+
+                <p><strong>For Operations:</strong></p>
+                <p>Deploy MinIO in Docker → Configure FileStorageSettings → Enable monitoring</p>
             </section>
         </div>
 
-        <!-- Overview Page -->
+        <!-- OVERVIEW PAGE -->
         <div id="overview" class="page">
+            <div class="page-header">
+                <h1>Overview</h1>
+                <p>Understanding Storage V1 architecture and concepts</p>
+            </div>
+
             <section>
-                <h2>Platform Overview</h2>
-                <p>Storage V1 is a unified file storage service that serves as the central repository for all file data across the BizFirst platform. It abstracts storage details away from consumers, providing a simple, consistent interface regardless of whether files are stored on MinIO (self-hosted), AWS S3, Cloudflare R2, or Backblaze B2.</p>
+                <h2>What is Storage V1?</h2>
+                <p>Storage V1 is a unified file storage service that abstracts away storage backend details. The same code runs on MinIO (self-hosted), AWS S3, Cloudflare R2, or Backblaze B2.</p>
+            </section>
 
-                <h3>Key Differentiators</h3>
+            <section>
+                <h2>Core Concepts</h2>
+
+                <h3>Content Addressable ID (CID)</h3>
+                <p>Every file is identified by its SHA-256 hash, not by filename. Same bytes → same CID always.</p>
+
+                <h3>Tenant Partitioning</h3>
+                <p>Storage key format: <code>tenant_{ID}/{CID}</code>. TenantID is resolved automatically from request context.</p>
+
+                <h3>Deduplication</h3>
+                <p>Upload same file twice by same tenant → stored once. Write skipped on duplicate. Caller gets same CID back instantly.</p>
+
+                <h3>Backup Strategy</h3>
+                <p>Daily restic snapshots → Backblaze B2. 12-month retention. Point-in-time restore available.</p>
+            </section>
+
+            <section>
+                <h2>Architecture Layers</h2>
                 <table>
-                    <thead>
-                        <tr>
-                            <th>Feature</th>
-                            <th>Description</th>
-                            <th>Benefit</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Content Addressable</strong></td>
-                            <td>SHA-256 hash-based identification</td>
-                            <td>Automatic deduplication, cryptographic integrity</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Tenant Isolated</strong></td>
-                            <td>Storage key includes tenant ID</td>
-                            <td>Zero cross-tenant access risk, regulatory compliant</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Backend Agnostic</strong></td>
-                            <td>Works with multiple S3 providers</td>
-                            <td>Vendor lock-in prevention, cost optimization options</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Logging Safe</strong></td>
-                            <td>Raw bytes never logged</td>
-                            <td>GDPR/HIPAA compliant, no data exposure risk</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Disk Capacity Guard</strong></td>
-                            <td>Configurable write-stop threshold</td>
-                            <td>Prevents disk-full disasters, automatic alerting</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Point-in-Time Restore</strong></td>
-                            <td>Daily restic snapshots, 12-month retention</td>
-                            <td>Disaster recovery, accidental deletion recovery</td>
-                        </tr>
-                    </tbody>
+                    <tr>
+                        <th>Layer</th>
+                        <th>Components</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Consumers</strong></td>
+                        <td>AI Functions, Process Engine, Payroll, Web APIs</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Contract</strong></td>
+                        <td>IObjectStorageProvider interface</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Implementation</strong></td>
+                        <td>S3ObjectStorageProvider, tenant resolution, dedup logic</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Storage</strong></td>
+                        <td>MinIO, AWS S3, Cloudflare R2, Backblaze B2</td>
+                    </tr>
                 </table>
-
-                <h3>Architecture Layers</h3>
-                <div style="background: var(--bg-dark); padding: 2rem; border-radius: 0.75rem; border: 1px solid var(--border); margin: 2rem 0;">
-                    <div style="text-align: center; color: var(--text-secondary); line-height: 2.5;">
-                        <p style="font-size: 1rem; margin-bottom: 1.5rem; color: var(--text-primary);"><strong>Consumer Layer</strong></p>
-                        <p style="font-size: 0.9rem;">AI Functions · Process Engine · Payroll System · FlowStudio · Custom Apps</p>
-
-                        <p style="font-size: 1.2rem; color: var(--accent); margin-top: 2rem;">↓</p>
-
-                        <p style="font-size: 1rem; margin-bottom: 1.5rem; color: var(--text-primary); margin-top: 1.5rem;"><strong>Contract Layer (IObjectStorageProvider)</strong></p>
-                        <p style="font-size: 0.9rem;">StoreAsync · GetStreamAsync · ExistsAsync · DeleteAsync</p>
-
-                        <p style="font-size: 1.2rem; color: var(--accent); margin-top: 2rem;">↓</p>
-
-                        <p style="font-size: 1rem; margin-bottom: 1.5rem; color: var(--text-primary); margin-top: 1.5rem;"><strong>Implementation Layer</strong></p>
-                        <p style="font-size: 0.9rem;">S3ObjectStorageProvider · Tenant Context Resolution · Deduplication</p>
-
-                        <p style="font-size: 1.2rem; color: var(--accent); margin-top: 2rem;">↓</p>
-
-                        <p style="font-size: 1rem; margin-bottom: 1.5rem; color: var(--text-primary); margin-top: 1.5rem;"><strong>Storage Layer</strong></p>
-                        <p style="font-size: 0.9rem;">MinIO (Self-hosted) · AWS S3 · Cloudflare R2 · Backblaze B2</p>
-
-                        <p style="font-size: 1.2rem; color: var(--accent); margin-top: 2rem;">↓</p>
-
-                        <p style="font-size: 1rem; margin-bottom: 1.5rem; color: var(--text-primary); margin-top: 1.5rem;"><strong>Backup & Restore</strong></p>
-                        <p style="font-size: 0.9rem;">restic · Backblaze B2 · 12-month retention · Encryption</p>
-                    </div>
-                </div>
-
-                <h3>Storage Flow Example</h3>
-                <div class="usecase-box">
-                    <h4>User uploads audio file "interview.mp3"</h4>
-                    <ol style="margin-left: 1.5rem;">
-                        <li><strong>Caller:</strong> Invokes StoreAsync(stream, "interview.mp3", "audio/mpeg")</li>
-                        <li><strong>S3ObjectStorageProvider:</strong> Reads stream → computes SHA-256 hash</li>
-                        <li><strong>CID Generated:</strong> "a1b2c3d4e5f6g7h8..." (SHA-256 of audio bytes)</li>
-                        <li><strong>Storage Key:</strong> "tenant_42/a1b2c3d4e5f6g7h8..." (includes tenant context)</li>
-                        <li><strong>Dedup Check:</strong> Does this key already exist in MinIO? (usually NO on first upload)</li>
-                        <li><strong>Upload:</strong> S3ObjectService.UploadAsync(key, bytes)</li>
-                        <li><strong>Return:</strong> "a1b2c3d4e5f6g7h8..." returned to caller</li>
-                        <li><strong>Backup:</strong> File automatically included in next daily restic snapshot</li>
-                    </ol>
-                </div>
-
-                <div class="alert alert-info">
-                    <strong>On Duplicate Upload:</strong> If the same audio bytes are uploaded again by the same tenant, the dedup check returns immediately without uploading. The caller gets the same CID back instantly. This saves both storage and bandwidth.
-                </div>
             </section>
         </div>
 
-        <!-- Use Cases & Business Cases -->
+        <!-- FEATURES PAGE -->
+        <div id="features" class="page">
+            <div class="page-header">
+                <h1>Features</h1>
+                <p>What Storage V1 provides</p>
+            </div>
+
+            <section>
+                <h2>Core Features</h2>
+
+                <h3>✓ Content-Addressable Storage</h3>
+                <p>Files identified by SHA-256 hash. Same content → same ID. Enables deduplication and integrity verification.</p>
+
+                <h3>✓ Tenant Isolation</h3>
+                <p>Complete data separation per tenant. Storage key includes tenant ID. Cross-tenant access cryptographically impossible.</p>
+
+                <h3>✓ Automatic Deduplication</h3>
+                <p>Upload same file twice → stored once per tenant. Saves storage and bandwidth. Automatic, no code needed.</p>
+
+                <h3>✓ Backend Agnostic</h3>
+                <p>Same code works with MinIO, AWS S3, R2, B2. Switch backends with configuration only. No code changes.</p>
+
+                <h3>✓ Disk Capacity Guard</h3>
+                <p>Automatic check before every write. If disk ≥ 90% (configurable), writes rejected with HTTP 507. Prevents disk-full disasters.</p>
+
+                <h3>✓ Logging Safe</h3>
+                <p>Raw bytes never logged. Only CID, tenant, filename, mime-type logged. GDPR/HIPAA compliant.</p>
+
+                <h3>✓ Built-in Backup</h3>
+                <p>Daily restic snapshots to Backblaze B2. Encrypted. 12-month retention. Point-in-time restore available.</p>
+
+                <h3>✓ Health Checks</h3>
+                <p>MinIO health endpoints. Prometheus metrics. Docker health check support. Automatic alerts at 70%, 85%, 95% disk usage.</p>
+            </section>
+        </div>
+
+        <!-- USE CASES PAGE -->
         <div id="usecases" class="page">
+            <div class="page-header">
+                <h1>Use Cases</h1>
+                <p>Real-world applications</p>
+            </div>
+
             <section>
-                <h2>Use Cases & Business Cases</h2>
-                <p>Storage V1 powers a wide range of use cases across the BizFirst platform, from AI function outputs to compliance documentation to user uploads.</p>
+                <h2>Payroll Documents</h2>
+                <p>Employees submit W-4s, tax forms, benefit documents. Storage V1 provides:</p>
+                <ul>
+                    <li>7-year compliance retention via lifecycle policies</li>
+                    <li>30% storage savings (template dedup)</li>
+                    <li>Automatic archival after 30 days</li>
+                    <li>Point-in-time restore for audits</li>
+                </ul>
+            </section>
 
-                <h3>Primary Use Cases</h3>
+            <section>
+                <h2>Audio Processing</h2>
+                <p>Users upload audio for transcription and analysis. Storage V1 enables:</p>
+                <ul>
+                    <li>Streaming uploads (no temp files)</li>
+                    <li>20% dedup from repeated audio</li>
+                    <li>CID-based retrieval for chaining</li>
+                    <li>Automatic versioning</li>
+                </ul>
+            </section>
 
-                <div class="usecase-box">
-                    <h4>📊 Payroll & HR Documents</h4>
-                    <p><strong>Business Case:</strong> Employees submit W-4s, direct deposit forms, and tax documents. Payroll processes require 7-year retention for compliance. Storage V1 provides:</p>
-                    <ul>
-                        <li>Immutable storage with content-based identification</li>
-                        <li>Automatic 7-year archive via lifecycle policies</li>
-                        <li>Point-in-time restore for audits</li>
-                        <li>GDPR/HIPAA-compliant logging (no raw data in logs)</li>
-                    </ul>
-                    <p><strong>Example:</strong> Company XYZ has 1000 employees. Each submits 2-3 documents per year. With 30% file overlap (same W-4 template), net storage is ~200GB vs 300GB without dedup. Annual savings: ~30GB × $0.006/GB = $180.</p>
-                </div>
+            <section>
+                <h2>AI Function Outputs</h2>
+                <p>AI functions generate reports and analysis. Benefits:</p>
+                <ul>
+                    <li>Deterministic output IDs (same input → same CID)</li>
+                    <li>Output caching via CID (skip re-processing)</li>
+                    <li>Cross-user output sharing via dedup</li>
+                    <li>Audit trail for reproducibility</li>
+                </ul>
+            </section>
 
-                <div class="usecase-box">
-                    <h4>🎙️ Audio & Media Processing</h4>
-                    <p><strong>Business Case:</strong> Users upload audio for transcription, analysis, and AI processing. Storage V1 enables:</p>
-                    <ul>
-                        <li>Stream-based uploads (no temp files)</li>
-                        <li>Deduplication for repeated audio (common phrases, templates)</li>
-                        <li>CID-based retrieval for AI function chaining</li>
-                        <li>Automatic versioning via lifecycle rules</li>
-                    </ul>
-                    <p><strong>Example:</strong> Audio processing system receives 5000 audio files per day (avg 5MB each = 25GB/day). With 20% dedup from common phrases, actual storage is 20GB/day. Monthly savings: 150GB × $0.006 = $0.90 in backup costs alone.</p>
-                </div>
-
-                <div class="usecase-box">
-                    <h4>🤖 AI Function Outputs</h4>
-                    <p><strong>Business Case:</strong> AI functions generate reports, transformed documents, and analysis results. Storage V1 provides:</p>
-                    <ul>
-                        <li>Deterministic output identification (same input → same CID)</li>
-                        <li>Output caching via CID (skip re-processing)</li>
-                        <li>Cross-user output sharing (via dedup)</li>
-                        <li>Audit trail for reproducibility</li>
-                    </ul>
-                    <p><strong>Example:</strong> Document-to-summary AI function processes 1000 requests/day. 30% of requests are identical documents from different users. With dedup, only 700 unique documents processed. Cost savings: 30% reduction in LLM API calls and processing time.</p>
-                </div>
-
-                <div class="usecase-box">
-                    <h4>📋 Process Automation Outputs</h4>
-                    <p><strong>Business Case:</strong> Workflow processes generate exports, reconciliation reports, and integration payloads. Storage V1 enables:</p>
-                    <ul>
-                        <li>Store once, reference many times</li>
-                        <li>Pass CIDs between workflow nodes</li>
-                        <li>Generate audit trails</li>
-                        <li>Export to external systems</li>
-                    </ul>
-                    <p><strong>Example:</strong> Daily payroll export generates CSV for 100 tenants. Export structure is identical, only data differs. With dedup on file structure + content, storage is compressed by ~40% vs. separate files.</p>
-                </div>
-
-                <div class="usecase-box">
-                    <h4>💾 Backup & Disaster Recovery</h4>
-                    <p><strong>Business Case:</strong> Platform-wide data resilience and compliance.</p>
-                    <ul>
-                        <li>Daily automated snapshots via restic</li>
-                        <li>Backblaze B2 for 99.999999% durability</li>
-                        <li>12-month point-in-time restore</li>
-                        <li>Encryption at rest and in transit</li>
-                    </ul>
-                    <p><strong>Cost Example:</strong> 1TB of file storage backed up daily. With restic's incremental+dedup, monthly data transferred is ~10GB (vs 30GB without dedup). Monthly B2 cost: 10GB × $0.01 egress = $0.10 (very cheap).</p>
-                </div>
-
-                <h3>Business Impact Summary</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Use Case</th>
-                            <th>Monthly Volume</th>
-                            <th>Dedup Savings</th>
-                            <th>Cost Impact</th>
-                            <th>Compliance Benefit</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Payroll Documents</td>
-                            <td>~1000 files</td>
-                            <td>30% (templates)</td>
-                            <td>$180/year saved</td>
-                            <td>7-year retention, GDPR ready</td>
-                        </tr>
-                        <tr>
-                            <td>Audio Processing</td>
-                            <td>~150K files</td>
-                            <td>20% (common audio)</td>
-                            <td>$0.90/month saved</td>
-                            <td>HIPAA audit logs</td>
-                        </tr>
-                        <tr>
-                            <td>AI Outputs</td>
-                            <td>~21K files</td>
-                            <td>30% (templates)</td>
-                            <td>$450/month saved</td>
-                            <td>Reproducibility audit trail</td>
-                        </tr>
-                        <tr>
-                            <td>Process Automation</td>
-                            <td>~3K files</td>
-                            <td>40% (structure)</td>
-                            <td>$120/month saved</td>
-                            <td>Workflow audit trail</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <section>
+                <h2>Process Automation</h2>
+                <p>Workflow processes generate exports and reports. Storage V1 provides:</p>
+                <ul>
+                    <li>Store once, reference many times</li>
+                    <li>Pass CIDs between workflow nodes</li>
+                    <li>Generate audit trails</li>
+                    <li>Export to external systems</li>
+                </ul>
             </section>
         </div>
 
-        <!-- User Personas -->
-        <div id="personas" class="page">
-            <section>
-                <h2>User Personas & Stakeholders</h2>
-                <p>Storage V1 serves multiple personas across the organization, each with different needs and interaction patterns.</p>
-
-                <h3>Developer Personas</h3>
-
-                <div class="persona-card">
-                    <div class="persona-header">
-                        <div class="persona-icon">👨‍💻</div>
-                        <div class="persona-name">
-                            <h4>Alex - Backend Engineer</h4>
-                            <p>Octopus AI Engine & ProcessEngine Integration</p>
-                        </div>
-                    </div>
-                    <p><strong>Goals:</strong> Integrate file storage into AI functions and workflow nodes without worrying about storage details.</p>
-                    <p><strong>Pain Points:</strong> Complex S3 configuration, tenant context management, duplicate file handling.</p>
-                    <p><strong>How Storage V1 Helps:</strong></p>
-                    <ul>
-                        <li>Simple IObjectStorageProvider interface (3 methods)</li>
-                        <li>Automatic tenant context resolution (no parameter passing)</li>
-                        <li>Built-in deduplication (no duplicate-checking code needed)</li>
-                        <li>Works across backends without code changes</li>
-                    </ul>
-                    <p><strong>Typical Workflow:</strong> Writes AI function output → Gets CID back → Stores CID in database → Next function retrieves via CID → Automatic dedup kicks in.</p>
-                </div>
-
-                <div class="persona-card">
-                    <div class="persona-header">
-                        <div class="persona-icon">🏗️</div>
-                        <div class="persona-name">
-                            <h4>Jordan - Infrastructure/DevOps</h4>
-                            <p>Storage Deployment & Operations</p>
-                        </div>
-                    </div>
-                    <p><strong>Goals:</strong> Deploy, monitor, and scale storage infrastructure efficiently. Minimize costs. Ensure high availability.</p>
-                    <p><strong>Pain Points:</strong> Multi-backend support complexity, capacity planning, disaster recovery procedures.</p>
-                    <p><strong>How Storage V1 Helps:</strong></p>
-                    <ul>
-                        <li>Single codebase for MinIO, AWS S3, R2, B2 (config only)</li>
-                        <li>Built-in Prometheus metrics for monitoring</li>
-                        <li>Automated disk capacity guards (prevents full-disk outages)</li>
-                        <li>Daily restic snapshots with automatic retention policies</li>
-                        <li>Zero downtime backend migration (config change only)</li>
-                    </ul>
-                    <p><strong>Typical Workflow:</strong> Deploy MinIO in staging → Monitor metrics → Switch to B2 in prod (config change only) → Automated backups → Set capacity alerts.</p>
-                </div>
-
-                <div class="persona-card">
-                    <div class="persona-header">
-                        <div class="persona-icon">🔒</div>
-                        <div class="persona-name">
-                            <h4>Sam - Security/Compliance Officer</h4>
-                            <p>Data Protection & Regulatory Compliance</p>
-                        </div>
-                    </div>
-                    <p><strong>Goals:</strong> Ensure data security, regulatory compliance (GDPR, HIPAA, SOC2), audit trails.</p>
-                    <p><strong>Pain Points:</strong> Raw file data in logs, tenant data mixing, retention policy enforcement.</p>
-                    <p><strong>How Storage V1 Helps:</strong></p>
-                    <ul>
-                        <li>Raw bytes never logged (only CID, tenant, filename, mime-type)</li>
-                        <li>Cryptographic tenant isolation (storage key includes tenant ID)</li>
-                        <li>Automatic lifecycle policies for retention/archival</li>
-                        <li>Point-in-time restore for forensics</li>
-                        <li>Encryption in transit and at rest (via S3 backends)</li>
-                        <li>Audit logs with no PII exposure</li>
-                    </ul>
-                    <p><strong>Typical Workflow:</strong> Audit request for tenant data → Query by date range → Restore from restic snapshot → Verify with cryptographic hashes.</p>
-                </div>
-
-                <h3>Operations Personas</h3>
-
-                <div class="persona-card">
-                    <div class="persona-header">
-                        <div class="persona-icon">📊</div>
-                        <div class="persona-name">
-                            <h4>Morgan - Operations Manager</h4>
-                            <p>Cost & Capacity Planning</p>
-                        </div>
-                    </div>
-                    <p><strong>Goals:</strong> Minimize storage costs, right-size infrastructure, forecast growth.</p>
-                    <p><strong>Pain Points:</strong> Unpredictable growth, vendor cost structure complexity, capacity surprises.</p>
-                    <p><strong>How Storage V1 Helps:</strong></p>
-                    <ul>
-                        <li>~30% storage savings via deduplication (real cost reduction)</li>
-                        <li>Flexible backend selection (MinIO for cheap, B2 for cost-optimal)</li>
-                        <li>Prometheus metrics for accurate forecasting</li>
-                        <li>Automated lifecycle policies reduce long-term costs</li>
-                    </ul>
-                    <p><strong>Typical Workflow:</strong> Query metrics for 3-month trends → Project 6-month usage → Right-size MinIO disk or switch to B2 → Track actual cost vs. forecast.</p>
-                </div>
-
-                <div class="persona-card">
-                    <div class="persona-header">
-                        <div class="persona-icon">🚨</div>
-                        <div class="persona-name">
-                            <h4>Casey - On-Call Support</h4>
-                            <p>Incident Response & Troubleshooting</p>
-                        </div>
-                    </div>
-                    <p><strong>Goals:</strong> Quickly diagnose and resolve storage issues. Minimize downtime.</p>
-                    <p><strong>Pain Points:</strong> Disk full outages, unclear error messages, slow diagnostics.</p>
-                    <p><strong>How Storage V1 Helps:</strong></p>
-                    <ul>
-                        <li>Automatic disk capacity guard (prevents "full disk" outage)</li>
-                        <li>Health check endpoints for quick status</li>
-                        <li>Prometheus metrics pre-configured for alerts</li>
-                        <li>Clear error codes (StorageCapacityException, etc.)</li>
-                        <li>Point-in-time restore for data recovery</li>
-                    </ul>
-                    <p><strong>Typical Workflow:</strong> Alert fires (disk at 85%) → Check /minio/health/ready → Query metrics → Contact capacity team if needed → Escalate restore if data lost.</p>
-                </div>
-
-                <h3>Business Personas</h3>
-
-                <div class="persona-card">
-                    <div class="persona-header">
-                        <div class="persona-icon">💼</div>
-                        <div class="persona-name">
-                            <h4>Taylor - Product Manager</h4>
-                            <p>Feature Enablement & Roadmap</p>
-                        </div>
-                    </div>
-                    <p><strong>Goals:</strong> Ship features faster, enable new use cases, improve user experience.</p>
-                    <p><strong>Pain Points:</strong> Storage integration complexity, file handling code sprawl, performance concerns.</p>
-                    <p><strong>How Storage V1 Helps:</strong></p>
-                    <ul>
-                        <li>3-method API enables quick integration</li>
-                        <li>No backend-specific code (works anywhere)</li>
-                        <li>Automatic dedup improves app performance</li>
-                        <li>Point-in-time restore reduces support load</li>
-                    </ul>
-                    <p><strong>Typical Workflow:</strong> Plan audio transcription feature → Alex integrates storage in 2 hours → Deploy → Monitor → Performance exceeds expectations (thanks to dedup).</p>
-                </div>
-
-                <div class="persona-card">
-                    <div class="persona-header">
-                        <div class="persona-icon">🤝</div>
-                        <div class="persona-name">
-                            <h4>Riley - Enterprise Customer Success</h4>
-                            <p>Customer Enablement & SLAs</p>
-                        </div>
-                    </div>
-                    <p><strong>Goals:</strong> Meet customer SLAs, ensure uptime, support compliance needs.</p>
-                    <p><strong>Pain Points:</strong> Customer data security concerns, retention policy complexity, disaster recovery questions.</p>
-                    <p><strong>How Storage V1 Helps:</strong></p>
-                    <ul>
-                        <li>Tenant isolation → data security assurance</li>
-                        <li>Daily backups → 99.999999% durability SLA</li>
-                        <li>Automated retention → compliance without manual work</li>
-                        <li>Point-in-time restore → customer confidence</li>
-                    </ul>
-                    <p><strong>Typical Workflow:</strong> Enterprise customer asks "How is our data protected?" → Show tenant isolation, backup process, restore capabilities → Customer satisfied.</p>
-                </div>
-            </section>
-        </div>
-
-        <!-- Architecture Page -->
-        <div id="architecture" class="page">
-            <section>
-                <h2>System Architecture</h2>
-                <p>Storage V1 is built on a layered architecture that separates concerns and ensures extensibility, testability, and backward compatibility.</p>
-
-                <h3>Logical Architecture</h3>
-                <div style="background: var(--bg-dark); padding: 2rem; border-radius: 0.75rem; border: 1px solid var(--border); margin: 2rem 0;">
-                    <div style="text-align: center; color: var(--text-secondary); line-height: 2.5;">
-                        <div style="margin-bottom: 2rem;">
-                            <p style="color: var(--text-primary); font-weight: bold;">Application Layer</p>
-                            <p style="font-size: 0.9rem;">AI Functions · Process Nodes · Payroll · FlowStudio · Web APIs</p>
-                        </div>
-                        <p style="font-size: 1.2rem; color: var(--accent);">↓ Depends on</p>
-                        <div style="margin-bottom: 2rem; margin-top: 2rem;">
-                            <p style="color: var(--accent); font-weight: bold; font-size: 1.1rem;">IObjectStorageProvider Interface</p>
-                            <p style="font-size: 0.9rem;">StoreAsync(stream, fileName, mimeType) → CID</p>
-                            <p style="font-size: 0.9rem;">GetStreamAsync(cid) → Stream</p>
-                            <p style="font-size: 0.9rem;">ExistsAsync(cid) → bool</p>
-                        </div>
-                        <p style="font-size: 1.2rem; color: var(--accent);">↓ Implemented by</p>
-                        <div style="margin-bottom: 2rem; margin-top: 2rem;">
-                            <p style="color: #10b981; font-weight: bold;">S3ObjectStorageProvider</p>
-                            <p style="font-size: 0.9rem;">• Tenant context resolution</p>
-                            <p style="font-size: 0.9rem;">• SHA-256 CID computation</p>
-                            <p style="font-size: 0.9rem;">• Deduplication logic</p>
-                            <p style="font-size: 0.9rem;">• Disk capacity guard</p>
-                        </div>
-                        <p style="font-size: 1.2rem; color: var(--accent);">↓ Uses</p>
-                        <div style="margin-bottom: 2rem; margin-top: 2rem;">
-                            <p style="color: #10b981; font-weight: bold;">IS3ObjectService</p>
-                            <p style="font-size: 0.9rem;">• UploadAsync · DownloadStreamAsync · ExistsAsync</p>
-                            <p style="font-size: 0.9rem;">• Abstraction over AWSSDK.S3</p>
-                        </div>
-                        <p style="font-size: 1.2rem; color: var(--accent);">↓ Connects to</p>
-                        <div style="margin-top: 2rem;">
-                            <p style="color: #f59e0b; font-weight: bold; font-size: 1.1rem;">Storage Backends</p>
-                            <p style="font-size: 0.9rem;">MinIO (self-hosted) · AWS S3 · Cloudflare R2 · Backblaze B2</p>
-                            <p style="font-size: 0.9rem;">⤳ restic backups ⤳ Backblaze B2</p>
-                        </div>
-                    </div>
-                </div>
-
-                <h3>Project Dependencies</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Project</th>
-                            <th>Type</th>
-                            <th>Dependencies</th>
-                            <th>Responsibility</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>BizFirst.Ai.InfraHub.Storage</strong></td>
-                            <td>New - Implementation</td>
-                            <td>Storage.Domain, S3.Services, AiSession.Domain</td>
-                            <td>S3ObjectStorageProvider, dedup logic, tenant resolution, capacity guard</td>
-                        </tr>
-                        <tr>
-                            <td><strong>BizFirst.Ai.InfraHub.Storage.Domain</strong></td>
-                            <td>New - Contract</td>
-                            <td>None</td>
-                            <td>IObjectStorageProvider interface, StorageCapacityException, StoreOptions</td>
-                        </tr>
-                        <tr>
-                            <td><strong>BizFirst.Integration.S3.Services</strong></td>
-                            <td>Existing - Modified</td>
-                            <td>S3.Domain, AWSSDK.S3</td>
-                            <td>S3 operations (upload, download, exists), client creation, error handling</td>
-                        </tr>
-                        <tr>
-                            <td><strong>BizFirst.Integration.S3.Domain</strong></td>
-                            <td>Existing - Modified</td>
-                            <td>AWSSDK.S3</td>
-                            <td>S3Credential record, result objects, custom endpoint support</td>
-                        </tr>
-                        <tr>
-                            <td><strong>BizFirst.Ai.AiSession.Domain</strong></td>
-                            <td>Existing</td>
-                            <td>None</td>
-                            <td>IAiSessionContextAccessor, tenant context, current request session</td>
-                        </tr>
-                        <tr>
-                            <td><strong>AWSSDK.S3</strong></td>
-                            <td>External NuGet</td>
-                            <td>None</td>
-                            <td>S3-compatible API client, AmazonS3Client, exception handling</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h3>Data Flow Diagram</h3>
-                <div style="background: var(--bg-dark); padding: 2rem; border-radius: 0.75rem; border: 1px solid var(--border); margin: 2rem 0;">
-                    <div style="color: var(--text-secondary); line-height: 2;">
-                        <div style="margin: 1rem 0; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 0.5rem;">
-                            <strong style="color: var(--accent);">UPLOAD FLOW:</strong><br>
-                            Caller.StoreAsync → S3ObjectStorageProvider.StoreAsync → Read bytes → SHA256 hash → key = tenant_{ID}/{cid} → Check dedup → MinIO.Upload → Log → Return CID
-                        </div>
-                        <div style="margin: 1rem 0; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; border-radius: 0.5rem;">
-                            <strong style="color: #10b981;">DOWNLOAD FLOW:</strong><br>
-                            Caller.GetStreamAsync(cid) → S3ObjectStorageProvider → key = tenant_{ID}/{cid} → MinIO.Download → IS3ObjectService → Return Stream
-                        </div>
-                        <div style="margin: 1rem 0; padding: 1rem; background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; border-radius: 0.5rem;">
-                            <strong style="color: #f59e0b;">BACKUP FLOW:</strong><br>
-                            MinIO Volume → Daily cron → restic backup → Backblaze B2 → Encryption at rest → 12-month retention policy → Automatic pruning
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-
-        <!-- API Reference Page -->
+        <!-- API PAGE -->
         <div id="api" class="page">
+            <div class="page-header">
+                <h1>API Reference</h1>
+                <p>IObjectStorageProvider interface</p>
+            </div>
+
             <section>
-                <h2>API Reference</h2>
-                <p>Storage V1 provides a simple, consistent interface through the IObjectStorageProvider contract. All callers interact through this interface regardless of backend.</p>
-
-                <h3>IObjectStorageProvider Interface</h3>
-
-                <h4>StoreAsync Method</h4>
+                <h2>StoreAsync</h2>
                 <pre><code>Task&lt;string&gt; StoreAsync(
     Stream stream,
     string? fileName,
     string? mimeType,
-    StoreOptions? options = null,
-    CancellationToken ct = default);
-</code></pre>
-                <p><strong>Description:</strong> Stores a file and returns its Content Addressable ID (CID).</p>
-                <ul>
-                    <li><strong>stream:</strong> File content stream (read from beginning)</li>
-                    <li><strong>fileName:</strong> Optional filename for logging</li>
-                    <li><strong>mimeType:</strong> MIME type (e.g., "application/pdf")</li>
-                    <li><strong>options:</strong> Per-request overrides for ACL, storage class</li>
-                    <li><strong>ct:</strong> Cancellation token</li>
-                    <li><strong>Returns:</strong> CID (SHA-256 hash as lowercase hex string)</li>
-                    <li><strong>Throws:</strong> StorageCapacityException (disk full), InvalidOperationException (other errors)</li>
-                </ul>
-                <p><strong>Behavior:</strong> Reads stream, computes SHA-256, checks for duplicate. If new, uploads to storage backend. Always returns CID (immediately on duplicate).</p>
-                <p><strong>Example:</strong></p>
-                <pre><code>var fileStream = System.IO.File.OpenRead("document.pdf");
-var cid = await _storage.StoreAsync(
-    fileStream,
-    "document.pdf",
-    "application/pdf");
-// cid = "a1b2c3d4e5f6..." (SHA-256 hash)</code></pre>
+    CancellationToken ct = default);</code></pre>
+                <p>Stores a file and returns its CID (content-addressable ID).</p>
+                <p><strong>Returns:</strong> CID (SHA-256 hash as lowercase hex string)</p>
+                <p><strong>Throws:</strong> StorageCapacityException if disk full</p>
+            </section>
 
-                <h4>GetStreamAsync Method</h4>
+            <section>
+                <h2>GetStreamAsync</h2>
                 <pre><code>Task&lt;Stream&gt; GetStreamAsync(
     string cid,
-    CancellationToken ct = default);
-</code></pre>
-                <p><strong>Description:</strong> Retrieves a file stream by CID for the current tenant.</p>
-                <ul>
-                    <li><strong>cid:</strong> Content Addressable ID from StoreAsync</li>
-                    <li><strong>ct:</strong> Cancellation token</li>
-                    <li><strong>Returns:</strong> Open stream positioned at beginning</li>
-                    <li><strong>Throws:</strong> FileNotFoundException (CID not found), UnauthorizedAccessException (cross-tenant access)</li>
-                </ul>
-                <p><strong>Behavior:</strong> Resolves storage key using current tenant context + CID. Retrieves from backend. Streams directly (no buffering).</p>
-                <p><strong>Example:</strong></p>
-                <pre><code>var stream = await _storage.GetStreamAsync("a1b2c3d4e5f6...");
-var bytes = new byte[stream.Length];
-await stream.ReadAsync(bytes);
-// bytes now contain the file content</code></pre>
+    CancellationToken ct = default);</code></pre>
+                <p>Retrieves a file stream by CID for the current tenant.</p>
+                <p><strong>Returns:</strong> Open stream (no buffering)</p>
+                <p><strong>Throws:</strong> FileNotFoundException if CID not found</p>
+            </section>
 
-                <h4>ExistsAsync Method</h4>
+            <section>
+                <h2>ExistsAsync</h2>
                 <pre><code>Task&lt;bool&gt; ExistsAsync(
     string cid,
-    CancellationToken ct = default);
-</code></pre>
-                <p><strong>Description:</strong> Checks if a file exists for the current tenant.</p>
-                <ul>
-                    <li><strong>cid:</strong> Content Addressable ID</li>
-                    <li><strong>ct:</strong> Cancellation token</li>
-                    <li><strong>Returns:</strong> true if exists, false otherwise</li>
-                </ul>
-                <p><strong>Behavior:</strong> Resolves storage key using current tenant context. Checks backend without transferring data.</p>
-                <p><strong>Example:</strong></p>
-                <pre><code>if (await _storage.ExistsAsync("a1b2c3d4e5f6..."))
-{
-    var stream = await _storage.GetStreamAsync("a1b2c3d4e5f6...");
-}</code></pre>
-
-                <h3>Data Models</h3>
-
-                <h4>StoreOptions Record</h4>
-                <pre><code>public record StoreOptions(
-    string? CannedAcl = null,      // null = use FileStorageSettings.CannedAcl
-    string? StorageClass = null    // null = use FileStorageSettings.StorageClass
-);
-</code></pre>
-
-                <h4>FileStorageSettings Class</h4>
-                <pre><code>public class FileStorageSettings
-{
-    public string BucketName { get; set; } = "bizfirst-files";
-    public string Endpoint { get; set; } = string.Empty;         // blank = AWS S3
-    public string AccessKey { get; set; } = string.Empty;
-    public string SecretKey { get; set; } = string.Empty;
-    public string Region { get; set; } = "us-east-1";
-    public bool ForcePathStyle { get; set; } = true;             // required for MinIO
-    public bool PrependTenantID { get; set; } = false;           // advanced option
-    public double WriteStopThresholdPercent { get; set; } = 90.0;
-    public string CannedAcl { get; set; } = "NoACL";
-    public string StorageClass { get; set; } = "STANDARD";
-}
-</code></pre>
-
-                <h3>Exceptions</h3>
-
-                <h4>StorageCapacityException</h4>
-                <p>Thrown when disk usage exceeds WriteStopThresholdPercent. Callers should return HTTP 507 (Service Unavailable) to clients.</p>
-                <pre><code>try
-{
-    var cid = await _storage.StoreAsync(stream, "file.pdf");
-}
-catch (StorageCapacityException ex)
-{
-    return StatusCode(507, new { error = "Storage service temporarily unavailable" });
-}</code></pre>
-
-                <h3>Dependency Injection Setup</h3>
-                <pre><code>services.AddObjectStorage(configuration);</code></pre>
-                <p>Configures:</p>
-                <ul>
-                    <li>IObjectStorageProvider → S3ObjectStorageProvider</li>
-                    <li>FileStorageSettings from "FileStorage" config section</li>
-                    <li>S3 services and HTTP client factory</li>
-                </ul>
+    CancellationToken ct = default);</code></pre>
+                <p>Checks if a file exists for the current tenant.</p>
+                <p><strong>Returns:</strong> true if exists, false otherwise</p>
             </section>
-        </div>
 
-        <!-- Operations & Monitoring -->
-        <div id="operations" class="page">
             <section>
-                <h2>Operations & Monitoring</h2>
-                <p>Storage V1 is designed for operational excellence with built-in monitoring, alerting, and automatic safeguards.</p>
-
-                <h3>Monitoring & Health Checks</h3>
-
-                <h4>MinIO Health Endpoints</h4>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Endpoint</th>
-                            <th>Purpose</th>
-                            <th>Returns</th>
-                            <th>Use Case</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>/minio/health/live</code></td>
-                            <td>Process alive</td>
-                            <td>200 if running</td>
-                            <td>Liveness probe</td>
-                        </tr>
-                        <tr>
-                            <td><code>/minio/health/ready</code></td>
-                            <td>Ready to serve</td>
-                            <td>200 if ready, 503 if disk full</td>
-                            <td>Readiness probe, Docker health check</td>
-                        </tr>
-                        <tr>
-                            <td><code>/minio/health/cluster</code></td>
-                            <td>Cluster health</td>
-                            <td>200 if cluster healthy</td>
-                            <td>Multi-node deployments</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h4>Docker Health Check Configuration</h4>
-                <pre><code>healthcheck:
-  test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
-  interval: 30s
-  timeout: 10s
-  retries: 3
-  start_period: 20s
-</code></pre>
-
-                <h3>Prometheus Metrics</h3>
-                <p>MinIO exposes Prometheus metrics at <code>/minio/v2/metrics/cluster</code>.</p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Metric</th>
-                            <th>Type</th>
-                            <th>Unit</th>
-                            <th>Alerting Threshold</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>minio_node_disk_used_bytes</code></td>
-                            <td>Gauge</td>
-                            <td>bytes</td>
-                            <td>Alert at 70%, critical at 85%, emergency at 95%</td>
-                        </tr>
-                        <tr>
-                            <td><code>minio_node_disk_total_bytes</code></td>
-                            <td>Gauge</td>
-                            <td>bytes</td>
-                            <td>For capacity calculation</td>
-                        </tr>
-                        <tr>
-                            <td><code>minio_node_disk_free_bytes</code></td>
-                            <td>Gauge</td>
-                            <td>bytes</td>
-                            <td>Available space</td>
-                        </tr>
-                        <tr>
-                            <td><code>minio_s3_requests_total</code></td>
-                            <td>Counter</td>
-                            <td>requests</td>
-                            <td>Track request volume</td>
-                        </tr>
-                        <tr>
-                            <td><code>minio_s3_requests_errors_total</code></td>
-                            <td>Counter</td>
-                            <td>errors</td>
-                            <td>Alert if > 5% error rate</td>
-                        </tr>
-                        <tr>
-                            <td><code>minio_node_disk_latency_us</code></td>
-                            <td>Histogram</td>
-                            <td>microseconds</td>
-                            <td>Alert if > 100ms p95</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h4>Prometheus Alert Rules</h4>
-                <pre><code>groups:
-  - name: bizfirst-storage
-    rules:
-      - alert: StorageDiskWarning
-        expr: (minio_node_disk_used_bytes / minio_node_disk_total_bytes) * 100 > 70
-        for: 5m
-        annotations:
-          summary: "Storage disk above 70% — plan capacity"
-
-      - alert: StorageDiskCritical
-        expr: (minio_node_disk_used_bytes / minio_node_disk_total_bytes) * 100 > 85
-        for: 2m
-        annotations:
-          summary: "Storage disk above 85% — immediate action"
-
-      - alert: StorageDown
-        expr: up{job="minio"} == 0
-        for: 1m
-        annotations:
-          summary: "MinIO is down — storage unavailable"
-
-      - alert: StorageHighErrorRate
-        expr: rate(minio_s3_requests_errors_total[5m]) > 0.05
-        for: 2m
-        annotations:
-          summary: "Storage error rate > 5%"
-</code></pre>
-
-                <h3>Disk Capacity Guard</h3>
-                <p>S3ObjectStorageProvider automatically checks disk usage before every write operation. If usage exceeds WriteStopThresholdPercent (default 90%), a StorageCapacityException is thrown, preventing writes and returning HTTP 507 to clients.</p>
-                <div class="alert alert-warning">
-                    <strong>Why 90%?</strong> Prevents catastrophic full-disk scenarios. At 95% usage, systems can become unstable. A 90% threshold gives ops 5% headroom to respond.
-                </div>
-
-                <h3>Logging Best Practices</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Logged</th>
-                            <th>Never Logged</th>
-                            <th>Reason</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>CID (hash)</td>
-                            <td>Raw file bytes</td>
-                            <td>No PII exposure</td>
-                        </tr>
-                        <tr>
-                            <td>TenantID</td>
-                            <td>Stream contents</td>
-                            <td>No sensitive data</td>
-                        </tr>
-                        <tr>
-                            <td>FileName</td>
-                            <td>File content</td>
-                            <td>Metadata OK, data not</td>
-                        </tr>
-                        <tr>
-                            <td>MimeType</td>
-                            <td>Decrypted data</td>
-                            <td>Type useful, content not</td>
-                        </tr>
-                        <tr>
-                            <td>Operation (Store/Get)</td>
-                            <td>User data</td>
-                            <td>Audit trail without PII</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h3>Capacity Planning</h3>
-                <div class="metrics">
-                    <div class="metric">
-                        <div class="metric-value">50</div>
-                        <div class="metric-label">Typical files/tenant/day</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-value">5 MB</div>
-                        <div class="metric-label">Average file size</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-value">25 GB</div>
-                        <div class="metric-label">Daily ingest (100 tenants)</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-value">525 GB</div>
-                        <div class="metric-label">Monthly net (with 30% dedup)</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-value">2.2 TB</div>
-                        <div class="metric-label">90-day hot storage</div>
-                    </div>
-                </div>
-
-                <div class="alert alert-info">
-                    <strong>Capacity Recommendation:</strong> Provision at least 2× estimated peak need. If forecasting 2.2TB for 90 days, provision 4.4TB to stay below the 70% warning threshold.
-                </div>
-            </section>
-        </div>
-
-        <!-- Deployment Page -->
-        <div id="deployment" class="page">
-            <section>
-                <h2>Deployment Guide</h2>
-                <p>Storage V1 code is backend-agnostic. Only configuration changes between environments.</p>
-
-                <h3>Supported Backends</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Backend</th>
-                            <th>Endpoint URL</th>
-                            <th>ForcePathStyle</th>
-                            <th>Cost</th>
-                            <th>Best For</th>
-                            <th>Setup Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>MinIO</strong></td>
-                            <td>http://minio:9000</td>
-                            <td>true</td>
-                            <td>Disk only</td>
-                            <td>On-premises, dev/staging</td>
-                            <td>15 min (Docker)</td>
-                        </tr>
-                        <tr>
-                            <td><strong>AWS S3</strong></td>
-                            <td>(blank)</td>
-                            <td>false</td>
-                            <td>~$0.023/GB/mo</td>
-                            <td>AWS-native orgs</td>
-                            <td>5 min (IAM setup)</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Cloudflare R2</strong></td>
-                            <td>R2 endpoint</td>
-                            <td>false</td>
-                            <td>~$0.015/GB + egress</td>
-                            <td>CDN integrated</td>
-                            <td>10 min (API token)</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Backblaze B2</strong></td>
-                            <td>B2 S3 endpoint</td>
-                            <td>false</td>
-                            <td>~$0.006/GB/mo</td>
-                            <td>Budget-optimal</td>
-                            <td>5 min (API key)</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="alert alert-danger">
-                    <strong>Note:</strong> Azure Blob Storage does NOT support S3 API. Not a compatible backend.
-                </div>
-
-                <h3>Windows Development Setup</h3>
-                <pre><code># Download MinIO for Windows
-# https://dl.min.io/server/minio/release/windows-amd64/minio.exe
-
-# Run MinIO
-.\minio.exe server C:\bizfirst-storage --console-address ":9001"
-
-# Access console at http://localhost:9001
-# Default credentials: minioadmin / minioadmin
-</code></pre>
-
-                <h4>appsettings.Development.json</h4>
-                <pre><code>{
-  "FileStorage": {
-    "BucketName": "bizfirst-files",
-    "Endpoint": "http://localhost:9000",
-    "AccessKey": "minioadmin",
-    "SecretKey": "minioadmin",
-    "Region": "us-east-1",
-    "ForcePathStyle": true,
-    "WriteStopThresholdPercent": 90.0
-  }
-}
-</code></pre>
-
-                <h3>Linux Docker Production Setup</h3>
-                <pre><code">services:
-  minio:
-    image: minio/minio:latest
-    container_name: bizfirst-minio
-    environment:
-      MINIO_ROOT_USER: ${MINIO_APP_ACCESS_KEY}
-      MINIO_ROOT_PASSWORD: ${MINIO_APP_SECRET_KEY}
-    volumes:
-      - minio_data:/data
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    command: server /data --console-address ":9001"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-    networks:
-      - bizfirst-network
-
-  minio-backup:
-    image: restic/restic:latest
-    container_name: bizfirst-minio-backup
-    depends_on:
-      - minio
-    volumes:
-      - minio_data:/data:ro
-      - restic_cache:/root/.cache/restic
-    environment:
-      RESTIC_REPOSITORY: s3:s3.us-west-004.backblazeb2.com/${B2_BUCKET_NAME}
-      RESTIC_PASSWORD: ${RESTIC_PASSWORD}
-      AWS_ACCESS_KEY_ID: ${B2_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${B2_APP_KEY}
-    entrypoint: >
-      /bin/sh -c "
-      restic snapshots 2>/dev/null || restic init;
-      restic backup /data --tag bizfirst;
-      restic forget --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --prune;
-      restic check;
-      "
-    restart: "no"
-    networks:
-      - bizfirst-network
-
-volumes:
-  minio_data:
-  restic_cache:
-
-networks:
-  bizfirst-network:
-</code></pre>
-
-                <h4>appsettings.Production.json</h4>
+                <h2>Configuration</h2>
                 <pre><code>{
   "FileStorage": {
     "BucketName": "bizfirst-files",
     "Endpoint": "http://minio:9000",
-    "AccessKey": "${MINIO_APP_ACCESS_KEY}",
-    "SecretKey": "${MINIO_APP_SECRET_KEY}",
+    "AccessKey": "key",
+    "SecretKey": "secret",
     "Region": "us-east-1",
     "ForcePathStyle": true,
     "WriteStopThresholdPercent": 90.0
   }
-}
-</code></pre>
-
-                <h3>Cloud S3 Migration</h3>
-                <pre><code">{
-  "FileStorage": {
-    "BucketName": "bizfirst-files",
-    "Endpoint": "",  // blank = AWS S3
-    "AccessKey": "${AWS_ACCESS_KEY_ID}",
-    "SecretKey": "${AWS_SECRET_ACCESS_KEY}",
-    "Region": "us-east-1",
-    "ForcePathStyle": false,  // false for AWS S3
-    "WriteStopThresholdPercent": 90.0
-  }
-}
-</code></pre>
-
-                <div class="alert alert-success">
-                    <strong>Zero-Downtime Migration:</strong> Deployment remains unchanged. Only configuration changes. No code recompilation needed. Restart application with new environment variables.
-                </div>
+}</code></pre>
             </section>
         </div>
 
-        <!-- Best Practices -->
-        <div id="bestpractices" class="page">
+        <!-- DEPLOYMENT PAGE -->
+        <div id="deployment" class="page">
+            <div class="page-header">
+                <h1>Deployment</h1>
+                <p>Setting up Storage V1</p>
+            </div>
+
             <section>
-                <h2>Best Practices</h2>
+                <h2>Deployment Options</h2>
+                <table>
+                    <tr>
+                        <th>Backend</th>
+                        <th>Setup Time</th>
+                        <th>Cost</th>
+                        <th>Best For</th>
+                    </tr>
+                    <tr>
+                        <td><strong>MinIO</strong></td>
+                        <td>15 min</td>
+                        <td>Disk only</td>
+                        <td>On-premises</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AWS S3</strong></td>
+                        <td>5 min</td>
+                        <td>~$0.023/GB/mo</td>
+                        <td>AWS-native</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cloudflare R2</strong></td>
+                        <td>10 min</td>
+                        <td>~$0.015/GB</td>
+                        <td>CDN integrated</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Backblaze B2</strong></td>
+                        <td>5 min</td>
+                        <td>~$0.006/GB/mo</td>
+                        <td>Budget optimal</td>
+                    </tr>
+                </table>
+            </section>
 
-                <h3>For Developers</h3>
+            <section>
+                <h2>Docker Deployment</h2>
+                <pre><code>services:
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+    command: server /data
+    restart: unless-stopped</code></pre>
+            </section>
 
-                <div class="usecase-box">
-                    <h4>✅ DO: Store Once, Reference Many</h4>
-                    <p>Upload file → get CID → save CID in database → reference CID for all future operations.</p>
-                    <pre><code>// Upload
-var cid = await _storage.StoreAsync(audioStream, "audio.mp3");
-await _db.SaveAudioReference(conversationId, cid);
-
-// Later: retrieve
-var savedCid = await _db.GetAudioReference(conversationId);
-var stream = await _storage.GetStreamAsync(savedCid);
-</code></pre>
-                </div>
-
-                <div class="usecase-box">
-                    <h4>✅ DO: Handle StorageCapacityException</h4>
-                    <p>Disk full is not a fatal error. Return HTTP 507 and let clients retry.</p>
-                    <pre><code>try
-{
-    var cid = await _storage.StoreAsync(stream, fileName);
-}
-catch (StorageCapacityException ex)
-{
-    _logger.LogError(ex, "Storage full");
-    return StatusCode(507, new { error = "Storage temporarily unavailable" });
-}
-</code></pre>
-                </div>
-
-                <div class="usecase-box">
-                    <h4>✅ DO: Use Streaming APIs</h4>
-                    <p>Never load entire file into memory. Use Stream directly.</p>
-                    <pre><code>using var file = System.IO.File.OpenRead(largeFile);
-var cid = await _storage.StoreAsync(file, "large.bin");
-// Stream consumed without buffering entire file
-</code></pre>
-                </div>
-
-                <div class="usecase-box">
-                    <h4>❌ DON'T: Assume Filenames Are Unique</h4>
-                    <p>Same filename uploaded twice might have different content. Always use CID.</p>
-                    <pre><code>// Wrong: comparing filenames
-if (filename == "report.pdf") { ... }
-
-// Right: comparing CIDs
-if (cid == previousCid) { /* dedup detected */ }
-</code></pre>
-                </div>
-
-                <div class="usecase-box">
-                    <h4>❌ DON'T: Log Raw File Content</h4>
-                    <p>Storage V1 already prevents this, but never log file bytes in your code either.</p>
-                    <pre><code>// Wrong
-_logger.LogInformation("Storing file: {content}", fileBytes);
-
-// Right
-_logger.LogInformation("Storing file: {cid} {name} {size}", cid, fileName, fileBytes.Length);
-</code></pre>
-                </div>
-
-                <h3>For Operations</h3>
-
-                <div class="usecase-box">
-                    <h4>✅ DO: Monitor Disk Usage</h4>
-                    <p>Set Prometheus alerts at 70%, 85%, 95%. Respond to 85% alert immediately.</p>
-                </div>
-
-                <div class="usecase-box">
-                    <h4>✅ DO: Test Backups Regularly</h4>
-                    <p>Monthly restore test from restic. Verify encryption password is accessible.</p>
-                </div>
-
-                <div class="usecase-box">
-                    <h4>✅ DO: Size Disk for 2× Peak Need</h4>
-                    <p>If forecasting 2.2TB peak, provision 4.4TB to stay below 70% threshold.</p>
-                </div>
-
-                <div class="usecase-box">
-                    <h4>❌ DON'T: Ignore 507 Errors</h4>
-                    <p>If clients start seeing 507 (Service Unavailable), disk is likely full. Don't wait for the alert. Act immediately.</p>
-                </div>
-
-                <div class="usecase-box">
-                    <h4>❌ DON'T: Change Configuration During Load</h4>
-                    <p>Endpoint, access keys, etc. are read at startup. Redeployment required. Do this during low-traffic window.</p>
-                </div>
-
-                <h3>For Security & Compliance</h3>
-
-                <div class="usecase-box">
-                    <h4>✅ DO: Rotate Credentials Regularly</h4>
-                    <p>S3 access keys should rotate every 90 days minimum.</p>
-                </div>
-
-                <div class="usecase-box">
-                    <h4>✅ DO: Enable Encryption at Rest</h4>
-                    <p>MinIO supports encryption. Backblaze B2 encrypts by default. Use both.</p>
-                </div>
-
-                <div class="usecase-box">
-                    <h4>✅ DO: Audit Access via Logs</h4>
-                    <p>Review logs for unusual access patterns. CID hash + tenant + timestamp sufficient for audit trail.</p>
-                </div>
-
-                <div class="usecase-box">
-                    <h4>❌ DON'T: Store Sensitive Secrets in Code</h4>
-                    <p>All credentials come from environment variables. Never commit to repo.</p>
-                </div>
-
-                <div class="usecase-box">
-                    <h4>❌ DON'T: Skip RESTIC_PASSWORD Backup</h4>
-                    <p>If password is lost, backups are unrecoverable. Store in vault independently.</p>
-                </div>
+            <section>
+                <h2>Configuration</h2>
+                <p><strong>For MinIO:</strong> Set Endpoint to <code>http://minio:9000</code></p>
+                <p><strong>For AWS S3:</strong> Leave Endpoint blank</p>
+                <p><strong>For R2/B2:</strong> Set custom Endpoint URL</p>
             </section>
         </div>
 
-        <!-- FAQ -->
+        <!-- MONITORING PAGE -->
+        <div id="monitoring" class="page">
+            <div class="page-header">
+                <h1>Monitoring & Operations</h1>
+                <p>Keep Storage V1 running smoothly</p>
+            </div>
+
+            <section>
+                <h2>Health Checks</h2>
+                <table>
+                    <tr>
+                        <th>Endpoint</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td>/minio/health/live</td>
+                        <td>Process is alive</td>
+                    </tr>
+                    <tr>
+                        <td>/minio/health/ready</td>
+                        <td>Ready to serve (includes disk check)</td>
+                    </tr>
+                    <tr>
+                        <td>/minio/health/cluster</td>
+                        <td>Cluster is healthy</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section>
+                <h2>Monitoring Thresholds</h2>
+                <table>
+                    <tr>
+                        <th>Level</th>
+                        <th>Threshold</th>
+                        <th>Action</th>
+                    </tr>
+                    <tr>
+                        <td>Warning</td>
+                        <td>70% disk</td>
+                        <td>Plan capacity increase</td>
+                    </tr>
+                    <tr>
+                        <td>Critical</td>
+                        <td>85% disk</td>
+                        <td>Immediate action required</td>
+                    </tr>
+                    <tr>
+                        <td>Emergency</td>
+                        <td>95% disk</td>
+                        <td>Writes will fail soon</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section>
+                <h2>Key Metrics</h2>
+                <ul>
+                    <li><code>minio_node_disk_used_bytes</code> - Disk usage</li>
+                    <li><code>minio_node_disk_total_bytes</code> - Total capacity</li>
+                    <li><code>minio_s3_requests_total</code> - Request count</li>
+                    <li><code>minio_s3_requests_errors_total</code> - Error count</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Disk Capacity Planning</h2>
+                <p><strong>Recommendation:</strong> Provision 2× estimated peak need.</p>
+                <ul>
+                    <li>If forecasting 2.2TB peak → provision 4.4TB</li>
+                    <li>Stay below 70% for safety</li>
+                    <li>Monitor growth trends</li>
+                </ul>
+            </section>
+        </div>
+
+        <!-- FAQ PAGE -->
         <div id="faq" class="page">
+            <div class="page-header">
+                <h1>FAQ</h1>
+                <p>Frequently asked questions</p>
+            </div>
+
             <section>
-                <h2>Frequently Asked Questions</h2>
+                <h2>General Questions</h2>
 
-                <h3>General Questions</h3>
+                <h3>What is a CID?</h3>
+                <p>Content Addressable ID. It's the SHA-256 hash of file bytes. Same file → same CID always.</p>
 
-                <div style="margin: 2rem 0;">
-                    <h4 style="color: var(--accent); margin-bottom: 0.5rem;">Q: What is a CID?</h4>
-                    <p><strong>A:</strong> Content Addressable ID. It's the SHA-256 hash of the file bytes. Same file → same CID, always. Used for deduplication and content integrity verification.</p>
-                </div>
+                <h3>Can I access files from another tenant?</h3>
+                <p>No. Storage key includes tenant ID. Cross-tenant access is impossible. System checks tenant context on every request.</p>
 
-                <div style="margin: 2rem 0;">
-                    <h4 style="color: var(--accent); margin-bottom: 0.5rem;">Q: Can I access files from another tenant?</h4>
-                    <p><strong>A:</strong> No. Storage key includes tenant ID: <code>tenant_{ID}/{CID}</code>. Cross-tenant access is cryptographically impossible. The system checks tenant context on every request.</p>
-                </div>
+                <h3>What happens if I upload the same file twice?</h3>
+                <p>First upload: file stored. Second upload: dedup hit, returned immediately. Same CID. Zero additional storage.</p>
 
-                <div style="margin: 2rem 0;">
-                    <h4 style="color: var(--accent); margin-bottom: 0.5rem;">Q: What happens if I upload the same file twice?</h4>
-                    <p><strong>A:</strong> First upload: file stored. Second upload: storage backend returns immediately (dedup hit). Caller gets same CID back. Zero additional storage cost.</p>
-                </div>
+                <h3>How long are backups kept?</h3>
+                <p>Daily snapshots: 7. Weekly: 4. Monthly: 12. Annual: 2. Total: 12+ months via restic retention policy.</p>
+            </section>
 
-                <div style="margin: 2rem 0;">
-                    <h4 style="color: var(--accent); margin-bottom: 0.5rem;">Q: Can I delete files?</h4>
-                    <p><strong>A:</strong> Not directly via IObjectStorageProvider (current version). Files are immutable once stored. Lifecycle policies handle archival/expiration. Full delete support planned for V2.</p>
-                </div>
+            <section>
+                <h2>Operational Questions</h2>
 
-                <h3>Operational Questions</h3>
+                <h3>What happens if disk fills up?</h3>
+                <p>At 90% (default), StoreAsync throws StorageCapacityException. HTTP 507 returned to clients. Automatic safeguard.</p>
 
-                <div style="margin: 2rem 0;">
-                    <h4 style="color: var(--accent); margin-bottom: 0.5rem;">Q: What happens if the disk fills up?</h4>
-                    <p><strong>A:</strong> At 90% (default threshold), StoreAsync throws StorageCapacityException. HTTP 507 returned to clients. Automatic safeguard prevents catastrophic disk-full scenarios.</p>
-                </div>
+                <h3>How do I monitor disk usage?</h3>
+                <p>Query <code>minio_node_disk_used_bytes</code> from Prometheus. Set alerts at 70%, 85%, 95%.</p>
 
-                <div style="margin: 2rem 0;">
-                    <h4 style="color: var(--accent); margin-bottom: 0.5rem;">Q: How do I monitor disk usage?</h4>
-                    <p><strong>A:</strong> Query <code>minio_node_disk_used_bytes / minio_node_disk_total_bytes * 100</code> from Prometheus. Set alerts at 70%, 85%, 95%. Health check endpoint: <code>/minio/health/ready</code> returns 503 when disk is critically full.</p>
-                </div>
+                <h3>Can I restore a single file?</h3>
+                <p>Yes. restic snapshots are per-file retrievable. Contact ops with CID + date range.</p>
+            </section>
 
-                <div style="margin: 2rem 0;">
-                    <h4 style="color: var(--accent); margin-bottom: 0.5rem;">Q: How long are backups kept?</h4>
-                    <p><strong>A:</strong> Daily snapshots: 7. Weekly: 4. Monthly: 12. Annual: 2. Total retention: 12+ months. Restic automatically prunes older snapshots per retention policy.</p>
-                </div>
+            <section>
+                <h2>Cost Questions</h2>
 
-                <div style="margin: 2rem 0;">
-                    <h4 style="color: var(--accent); margin-bottom: 0.5rem;">Q: Can I restore a single file?</h4>
-                    <p><strong>A:</strong> Yes. restic snapshots are per-file retrievable. Contact ops team with CID + date range to restore.</p>
-                </div>
+                <h3>Which backend is cheapest?</h3>
+                <p>Backblaze B2: ~$0.006/GB/month. AWS S3: ~$0.023/GB/month. MinIO: only disk cost.</p>
 
-                <h3>Cost Questions</h3>
+                <h3>How much savings from deduplication?</h3>
+                <p>20-30% on average. Payroll (templates): 30%. Audio: 10-20%. AI outputs: 30-50%.</p>
+            </section>
 
-                <div style="margin: 2rem 0;">
-                    <h4 style="color: var(--accent); margin-bottom: 0.5rem;">Q: Which backend is cheapest?</h4>
-                    <p><strong>A:</strong> Backblaze B2: ~$0.006/GB/month for storage. AWS S3 ~$0.023/GB/month. MinIO (self-hosted): only disk cost. Choose based on infrastructure (on-prem vs cloud), team capacity (ops overhead), and scale.</p>
-                </div>
+            <section>
+                <h2>Security Questions</h2>
 
-                <div style="margin: 2rem 0;">
-                    <h4 style="color: var(--accent); margin-bottom: 0.5rem;">Q: How much can I save with deduplication?</h4>
-                    <p><strong>A:</strong> Depends on file overlap. Payroll templates: 30% savings. Audio: 10-20%. AI outputs: 30-50%. Conservative estimate: 20-30% across mixed workloads.</p>
-                </div>
+                <h3>Is my data encrypted?</h3>
+                <p>In transit: HTTPS. At rest: depends on backend. MinIO supports encryption. B2 encrypts by default.</p>
 
-                <h3>Security Questions</h3>
-
-                <div style="margin: 2rem 0;">
-                    <h4 style="color: var(--accent); margin-bottom: 0.5rem;">Q: Is my data encrypted?</h4>
-                    <p><strong>A:</strong> In transit: HTTPS (S3 protocol). At rest: depends on backend. MinIO can enable encryption. Backblaze B2 encrypts by default. AWS S3 requires opt-in. Recommend: enable all layers.</p>
-                </div>
-
-                <div style="margin: 2rem 0;">
-                    <h4 style="color: var(--accent); margin-bottom: 0.5rem;">Q: Are file bytes logged?</h4>
-                    <p><strong>A:</strong> Never. Logs contain only: CID (hash), TenantID, FileName, MimeType, operation type, timestamp. No raw file data ever logged. GDPR/HIPAA compliant.</p>
-                </div>
-
-                <div style="margin: 2rem 0;">
-                    <h4 style="color: var(--accent); margin-bottom: 0.5rem;">Q: What if my access key is compromised?</h4>
-                    <p><strong>A:</strong> Rotate immediately. Old key: no longer works. New key: deployed via environment variables. Restart apps. Restic password should be independent secret.</p>
-                </div>
+                <h3>Are file bytes logged?</h3>
+                <p>Never. Logs contain only: CID, TenantID, FileName, MimeType. No raw data. GDPR/HIPAA compliant.</p>
             </section>
         </div>
-    </main>
 
-    <footer>
-        <p><strong>BizFirst Storage V1</strong> — Enterprise File Storage Platform</p>
-        <p>Open-source architecture · S3-compatible · Tenant-isolated · Built-in backup</p>
-        <p style="margin-top: 2rem; font-size: 0.9rem; color: var(--text-secondary);">
-            Documentation hosted on GitHub · Last updated: 2024 ·
-            <a href="#" onclick="showPage('home')" style="color: var(--accent); text-decoration: none;">Back to Home</a>
-        </p>
-    </footer>
+        <!-- FOOTER -->
+        <footer>
+            <p><strong>BizFirst Storage V1</strong> — Enterprise File Storage Platform</p>
+            <p style="margin-top: 1rem; font-size: 0.9rem;">
+                <a href="https://www.bizfirstai.com" target="_blank">BizFirstAI.com</a> ·
+                <a href="https://docs.bizfirstai.com" target="_blank">Docs</a> ·
+                <a href="https://github.com/BizFirstFi/BizFirstStorageAi" target="_blank">GitHub</a>
+            </p>
+        </footer>
+    </div>
 
     <script>
         function showPage(pageId) {
+            // Hide all pages
             const pages = document.querySelectorAll('.page');
             pages.forEach(page => page.classList.remove('active'));
 
-            const selectedPage = document.getElementById(pageId);
-            if (selectedPage) {
-                selectedPage.classList.add('active');
-                window.scrollTo(0, 0);
+            // Show selected page
+            const page = document.getElementById(pageId);
+            if (page) {
+                page.classList.add('active');
+            }
+
+            // Update menu
+            const links = document.querySelectorAll('.sidebar-menu a');
+            links.forEach(link => link.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Close mobile menu
+            closeMobileMenu();
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        function closeMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('active');
             }
         }
 
-        function handleSearch(event) {
-            const searchBox = document.getElementById('searchBox');
-            const suggestions = document.getElementById('searchSuggestions');
-
-            if (event.key === 'Enter') {
-                const query = searchBox.value.trim();
-                if (query) {
-                    window.open(`https://docs.bizfirstai.com/search?q=${encodeURIComponent(query)}`, '_blank');
-                    searchBox.value = '';
-                    suggestions.classList.remove('active');
-                }
-            } else if (event.key === 'ArrowDown') {
-                suggestions.classList.add('active');
-            }
-        }
-
-        // Toggle search suggestions on focus
-        document.getElementById('searchBox').addEventListener('focus', function() {
-            document.getElementById('searchSuggestions').classList.add('active');
-        });
-
-        document.getElementById('searchBox').addEventListener('blur', function() {
-            setTimeout(() => {
-                document.getElementById('searchSuggestions').classList.remove('active');
-            }, 200);
-        });
-
-        // Close search on escape
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                document.getElementById('searchSuggestions').classList.remove('active');
-                document.getElementById('searchBox').blur();
+        // Close menu when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.menu-toggle');
+            if (!sidebar.contains(event.target) && !toggle.contains(event.target)) {
+                closeMobileMenu();
             }
         });
 
-        // Show home by default
-        showPage('home');
+        // Close menu on window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                document.getElementById('sidebar').classList.remove('active');
+            }
+        });
     </script>
 </body>
 </html>
