@@ -24,7 +24,7 @@ volumes:
   bizfirst-backup-data:
     name: bizfirst-backup-data
 
-# ofelia.ini controls the schedule — see ofelia.ini in this folder
+# ofelia.ini controls the schedule, see ofelia.ini in this folder
 # Run manually:
 #   docker exec bizfirst-backup-runner restic init
 #   docker exec bizfirst-backup-runner restic backup /data --tag bizfirst-primary

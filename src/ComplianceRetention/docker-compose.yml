@@ -44,6 +44,6 @@ volumes:
   bizfirst-compliance-data:
     name: bizfirst-compliance-data
 
-# COMPLIANCE mode: objects cannot be deleted or overwritten for 7 years — even by root
+# COMPLIANCE mode: objects cannot be deleted or overwritten for 7 years, even by root
 # GOVERNANCE mode: objects protected but root can override with special header
-# Object Lock must be set at bucket creation (--with-lock flag) — cannot be added later
+# Object Lock must be set at bucket creation (--with-lock flag), cannot be added later
