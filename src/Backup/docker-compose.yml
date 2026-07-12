@@ -1,0 +1,31 @@
+services:
+  bizfirst-backup-scheduler:
+    image: mcuadros/ofelia:latest
+    container_name: bizfirst-backup-scheduler
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./ofelia.ini:/etc/ofelia/config.ini:ro
+    restart: unless-stopped
+
+  bizfirst-backup-runner:
+    image: restic/restic:latest
+    container_name: bizfirst-backup-runner
+    volumes_from:
+      - bizfirst-primary
+    volumes:
+      - bizfirst-backup-data:/backup
+    environment:
+      RESTIC_REPOSITORY: /backup
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:-bizfirst123}
+    entrypoint: ["tail", "-f", "/dev/null"]
+    restart: unless-stopped
+
+volumes:
+  bizfirst-backup-data:
+    name: bizfirst-backup-data
+
+# ofelia.ini controls the schedule — see ofelia.ini in this folder
+# Run manually:
+#   docker exec bizfirst-backup-runner restic init
+#   docker exec bizfirst-backup-runner restic backup /data --tag bizfirst-primary
+#   docker exec bizfirst-backup-runner restic snapshots

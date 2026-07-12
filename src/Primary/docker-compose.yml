@@ -1,0 +1,43 @@
+services:
+  bizfirst-primary:
+    image: minio/minio:latest
+    container_name: bizfirst-primary
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - bizfirst-primary-data:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+      MINIO_SITE_NAME: bizfirst-primary
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  bizfirst-primary-init:
+    image: minio/mc:latest
+    container_name: bizfirst-primary-init
+    depends_on:
+      bizfirst-primary:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set primary http://bizfirst-primary:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc mb --ignore-existing primary/bizfirst-files;
+      mc anonymous set none primary/bizfirst-files;
+      echo 'Primary bucket ready';
+      "
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+    restart: "no"
+
+volumes:
+  bizfirst-primary-data:
+    name: bizfirst-primary-data

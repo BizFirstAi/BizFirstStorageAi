@@ -1,0 +1,66 @@
+services:
+  bizfirst-pitr:
+    image: minio/minio:latest
+    container_name: bizfirst-pitr
+    command: server /data --console-address ":9041"
+    ports:
+      - "9040:9000"
+      - "9041:9001"
+    volumes:
+      - bizfirst-pitr-data:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+      MINIO_SITE_NAME: bizfirst-pitr
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  bizfirst-pitr-init:
+    image: minio/mc:latest
+    container_name: bizfirst-pitr-init
+    depends_on:
+      bizfirst-pitr:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set pitr http://bizfirst-pitr:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc mb --ignore-existing pitr/bizfirst-versioned;
+      mc version enable pitr/bizfirst-versioned;
+      echo 'PITR bucket ready: versioning enabled on bizfirst-versioned';
+      "
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+    restart: "no"
+
+  bizfirst-pitr-snapshotter:
+    image: restic/restic:latest
+    container_name: bizfirst-pitr-snapshotter
+    volumes_from:
+      - bizfirst-pitr
+    volumes:
+      - bizfirst-pitr-snapshots:/snapshots
+    environment:
+      RESTIC_REPOSITORY: /snapshots
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:-bizfirst123}
+    entrypoint: ["tail", "-f", "/dev/null"]
+    restart: unless-stopped
+
+volumes:
+  bizfirst-pitr-data:
+    name: bizfirst-pitr-data
+  bizfirst-pitr-snapshots:
+    name: bizfirst-pitr-snapshots
+
+# Restore to a specific point in time:
+#   docker exec bizfirst-pitr-snapshotter restic snapshots
+#   docker exec bizfirst-pitr-snapshotter restic restore <snapshot-id> --target /restore
+#
+# Object-level versioning restore via mc:
+#   mc ls --versions pitr/bizfirst-versioned/path/to/file
+#   mc cp --version-id <version-id> pitr/bizfirst-versioned/path/to/file ./restored-file

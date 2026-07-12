@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: bizfirst-primary
+    metrics_path: /minio/v2/metrics/cluster
+    static_configs:
+      - targets: ["host.docker.internal:9000"]
+
+  - job_name: bizfirst-hotstandby
+    metrics_path: /minio/v2/metrics/cluster
+    static_configs:
+      - targets: ["host.docker.internal:9010"]
+
+  - job_name: bizfirst-archival
+    metrics_path: /minio/v2/metrics/cluster
+    static_configs:
+      - targets: ["host.docker.internal:9020"]
+
+  - job_name: bizfirst-compliance
+    metrics_path: /minio/v2/metrics/cluster
+    static_configs:
+      - targets: ["host.docker.internal:9030"]
+
+  - job_name: bizfirst-pitr
+    metrics_path: /minio/v2/metrics/cluster
+    static_configs:
+      - targets: ["host.docker.internal:9040"]

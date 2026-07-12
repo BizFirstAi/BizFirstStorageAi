@@ -1,0 +1,55 @@
+services:
+  bizfirst-watchdog:
+    image: alpine:latest
+    container_name: bizfirst-watchdog
+    entrypoint: >
+      /bin/sh -c "
+      apk add --no-cache curl;
+      while true; do
+        TIMESTAMP=$$(date -u '+%Y-%m-%dT%H:%M:%SZ');
+
+        PRIMARY=$$(curl -sf --max-time 5 http://host.docker.internal:9000/minio/health/live && echo OK || echo FAIL);
+        STANDBY=$$(curl -sf --max-time 5 http://host.docker.internal:9010/minio/health/live && echo OK || echo FAIL);
+
+        echo \"$$TIMESTAMP [PRIMARY] $$PRIMARY\";
+        echo \"$$TIMESTAMP [HOTSTANDBY] $$STANDBY\";
+
+        if [ \"$$PRIMARY\" = 'FAIL' ] && [ \"$$STANDBY\" = 'OK' ]; then
+          echo \"$$TIMESTAMP [ALERT] Primary is DOWN. HotStandby is UP. Manual failover required.\";
+        fi;
+
+        sleep 30;
+      done
+      "
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: bizfirst-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - bizfirst-prometheus-data:/prometheus
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: bizfirst-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - bizfirst-grafana-data:/var/lib/grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-bizfirst123}
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  bizfirst-prometheus-data:
+    name: bizfirst-prometheus-data
+  bizfirst-grafana-data:
+    name: bizfirst-grafana-data
