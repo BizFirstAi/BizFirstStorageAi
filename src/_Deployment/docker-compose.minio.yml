@@ -1,0 +1,309 @@
+version: '3.8'
+
+services:
+  # ==================== PRIMARY STORAGE ====================
+  bizfirst-primary:
+    image: minio/minio:latest
+    container_name: bizfirst-primary
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - network_QA
+      - network_Demo
+    volumes:
+      - bizfirst-primary-data:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+      MINIO_SITE_NAME: bizfirst-primary
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  bizfirst-primary-init:
+    image: minio/mc:latest
+    container_name: bizfirst-primary-init
+    depends_on:
+      bizfirst-primary:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set primary http://bizfirst-primary:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc mb --ignore-existing primary/bizfirst-files;
+      mc anonymous set none primary/bizfirst-files;
+      echo 'Primary bucket ready';
+      "
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+    restart: "no"
+
+  # ==================== BACKUP SERVICE ====================
+  bizfirst-backup-scheduler:
+    image: mcuadros/ofelia:latest
+    container_name: bizfirst-backup-scheduler
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./ofelia.ini:/etc/ofelia/config.ini:ro
+    restart: unless-stopped
+
+  bizfirst-backup-runner:
+    image: restic/restic:latest
+    container_name: bizfirst-backup-runner
+    volumes_from:
+      - bizfirst-primary
+    volumes:
+      - bizfirst-backup-data:/backup
+    environment:
+      RESTIC_REPOSITORY: /backup
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:-bizfirst123}
+    entrypoint: ["tail", "-f", "/dev/null"]
+    restart: unless-stopped
+
+  # ==================== HOT STANDBY ====================
+  bizfirst-hotstandby:
+    image: minio/minio:latest
+    container_name: bizfirst-hotstandby
+    command: server /data --console-address ":9011"
+    ports:
+      - "9010:9000"
+      - "9011:9011"
+    volumes:
+      - bizfirst-hotstandby-data:/data
+    networks:
+      - network_QA
+      - network_Demo
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+      MINIO_SITE_NAME: bizfirst-hotstandby
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  bizfirst-hotstandby-setup:
+    image: minio/mc:latest
+    container_name: bizfirst-hotstandby-setup
+    depends_on:
+      bizfirst-hotstandby:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set primary http://bizfirst-primary:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc alias set standby http://bizfirst-hotstandby:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc admin replicate add primary standby;
+      echo 'Site replication configured: primary -> hotstandby';
+      "
+    networks:
+      - network_QA
+      - network_Demo
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: "no"
+
+  # ==================== RESILIENCY WATCHDOG ====================
+  bizfirst-watchdog:
+    image: alpine:latest
+    container_name: bizfirst-watchdog
+    entrypoint: >
+      /bin/sh -c "
+      apk add --no-cache curl;
+      while true; do
+        TIMESTAMP=$$(date -u '+%Y-%m-%dT%H:%M:%SZ');
+
+        PRIMARY=$$(curl -sf --max-time 5 http://bizfirst-primary:9000/minio/health/live && echo OK || echo FAIL);
+        STANDBY=$$(curl -sf --max-time 5 http://bizfirst-hotstandby:9000/minio/health/live && echo OK || echo FAIL);
+
+        echo \"$$TIMESTAMP [PRIMARY] $$PRIMARY\";
+        echo \"$$TIMESTAMP [HOTSTANDBY] $$STANDBY\";
+
+        if [ \"$$PRIMARY\" = 'FAIL' ] && [ \"$$STANDBY\" = 'OK' ]; then
+          echo \"$$TIMESTAMP [ALERT] Primary is DOWN. HotStandby is UP. Manual failover required.\";
+        fi;
+
+        sleep 30;
+      done
+      "
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # ==================== ARCHIVAL SERVICE ====================
+  bizfirst-archival:
+    image: minio/minio:latest
+    container_name: bizfirst-archival
+    command: server /data --console-address ":9021"
+    ports:
+      - "9020:9000"
+      - "9021:9021"
+    volumes:
+      - bizfirst-archival-data:/data
+    networks:
+      - network_QA
+      - network_Demo
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+      MINIO_SITE_NAME: bizfirst-archival
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  bizfirst-archival-init:
+    image: minio/mc:latest
+    container_name: bizfirst-archival-init
+    depends_on:
+      bizfirst-archival:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set archival http://bizfirst-archival:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc mb --ignore-existing archival/bizfirst-archive;
+      mc anonymous set none archival/bizfirst-archive;
+      mc ilm rule add --expire-days 3650 archival/bizfirst-archive;
+      mc ilm rule add --transition-days 90 --storage-class GLACIER archival/bizfirst-archive;
+      echo 'Archival bucket ready: 90-day transition, 10-year expiry';
+      "
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+    restart: "no"
+
+  # ==================== COMPLIANCE & RETENTION ====================
+  bizfirst-compliance:
+    image: minio/minio:latest
+    container_name: bizfirst-compliance
+    command: server /data --console-address ":9031"
+    ports:
+      - "9030:9000"
+      - "9031:9031"
+    volumes:
+      - bizfirst-compliance-data:/data
+    networks:
+      - network_QA
+      - network_Demo
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+      MINIO_SITE_NAME: bizfirst-compliance
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  bizfirst-compliance-init:
+    image: minio/mc:latest
+    container_name: bizfirst-compliance-init
+    depends_on:
+      bizfirst-compliance:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set compliance http://bizfirst-compliance:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc mb --ignore-existing --with-lock compliance/bizfirst-legal-hold;
+      mc mb --ignore-existing --with-lock compliance/bizfirst-worm;
+      mc retention set --default COMPLIANCE 7y compliance/bizfirst-worm;
+      mc retention set --default GOVERNANCE 1y compliance/bizfirst-legal-hold;
+      echo 'WORM buckets ready: legal-hold (GOVERNANCE 1y), worm (COMPLIANCE 7y)';
+      "
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+    restart: "no"
+
+  # ==================== POINT-IN-TIME RESTORE ====================
+  bizfirst-pitr:
+    image: minio/minio:latest
+    container_name: bizfirst-pitr
+    command: server /data --console-address ":9041"
+    ports:
+      - "9040:9000"
+      - "9041:9041"
+    volumes:
+      - bizfirst-pitr-data:/data
+    networks:
+      - network_QA
+      - network_Demo
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+      MINIO_SITE_NAME: bizfirst-pitr
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  bizfirst-pitr-init:
+    image: minio/mc:latest
+    container_name: bizfirst-pitr-init
+    depends_on:
+      bizfirst-pitr:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set pitr http://bizfirst-pitr:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc mb --ignore-existing pitr/bizfirst-versioned;
+      mc version enable pitr/bizfirst-versioned;
+      echo 'PITR bucket ready: versioning enabled on bizfirst-versioned';
+      "
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+    restart: "no"
+
+  bizfirst-pitr-snapshotter:
+    image: restic/restic:latest
+    container_name: bizfirst-pitr-snapshotter
+    volumes_from:
+      - bizfirst-pitr
+    volumes:
+      - bizfirst-pitr-snapshots:/snapshots
+    environment:
+      RESTIC_REPOSITORY: /snapshots
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:-bizfirst123}
+    entrypoint: ["tail", "-f", "/dev/null"]
+    restart: unless-stopped
+
+networks:
+  network_QA:
+    external: true
+  network_Demo:
+    external: true
+volumes:
+  bizfirst-primary-data:
+    name: bizfirst-primary-data
+  bizfirst-backup-data:
+    name: bizfirst-backup-data
+  bizfirst-hotstandby-data:
+    name: bizfirst-hotstandby-data
+  bizfirst-archival-data:
+    name: bizfirst-archival-data
+  bizfirst-compliance-data:
+    name: bizfirst-compliance-data
+  bizfirst-pitr-data:
+    name: bizfirst-pitr-data
+  bizfirst-pitr-snapshots:
+    name: bizfirst-pitr-snapshots
