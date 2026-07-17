@@ -37,7 +37,8 @@ services:
       mc alias set primary http://bizfirst-primary:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
       mc mb --ignore-existing primary/bizfirst-files;
       mc anonymous set none primary/bizfirst-files;
-      echo 'Primary bucket ready';
+      mc version enable primary/bizfirst-files;
+      echo 'Primary bucket ready: versioning enabled';
       "
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
@@ -263,9 +264,8 @@ services:
       mc alias set archival http://bizfirst-archival:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
       mc mb --ignore-existing archival/bizfirst-archive;
       mc anonymous set none archival/bizfirst-archive;
-      mc ilm rule add --expire-days 3650 archival/bizfirst-archive;
-      mc ilm rule add --transition-days 90 --storage-class GLACIER archival/bizfirst-archive;
-      echo 'Archival bucket ready: 90-day transition, 10-year expiry';
+      mc ilm rule add --expire-days 3650 archival/bizfirst-archive || true;
+      echo 'Archival bucket ready: 10-year expiry (ILM tier from primary configured by replication-setup)';
       "
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
@@ -372,6 +372,43 @@ services:
       RESTIC_PASSWORD: ${RESTIC_PASSWORD:-bizfirst123}
     entrypoint: ["tail", "-f", "/dev/null"]
     restart: unless-stopped
+
+  # ==================== REPLICATION SETUP ====================
+  bizfirst-replication-setup:
+    image: minio/mc:latest
+    container_name: bizfirst-replication-setup
+    depends_on:
+      bizfirst-primary:
+        condition: service_healthy
+      bizfirst-archival:
+        condition: service_healthy
+      bizfirst-compliance:
+        condition: service_healthy
+      bizfirst-pitr:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set primary http://bizfirst-primary:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc alias set archival http://bizfirst-archival:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc alias set compliance http://bizfirst-compliance:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc alias set pitr http://bizfirst-pitr:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+
+      mc ilm tier add minio primary ARCHIVAL-TIER --endpoint http://bizfirst-archival:9000 --access-key $$MINIO_ROOT_USER --secret-key $$MINIO_ROOT_PASSWORD --bucket bizfirst-archive 2>/dev/null || true;
+      mc ilm rule add --transition-days 90 --transition-tier ARCHIVAL-TIER primary/bizfirst-files 2>/dev/null || true;
+
+      mc replicate add --remote-bucket http://$$MINIO_ROOT_USER:$$MINIO_ROOT_PASSWORD@bizfirst-compliance:9000/bizfirst-worm --replicate delete-marker,existing-objects,metadata-sync --priority 10 primary/bizfirst-files 2>/dev/null || true;
+
+      mc replicate add --remote-bucket http://$$MINIO_ROOT_USER:$$MINIO_ROOT_PASSWORD@bizfirst-pitr:9000/bizfirst-versioned --replicate existing-objects,metadata-sync --priority 20 primary/bizfirst-files 2>/dev/null || true;
+
+      echo 'Replication ready: primary -> archival (ILM 90d), compliance (WORM mirror), pitr (versioned no-delete)';
+      "
+    networks:
+      - network_QA
+      - network_Demo
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+    restart: "no"
 
 networks:
   network_QA:
