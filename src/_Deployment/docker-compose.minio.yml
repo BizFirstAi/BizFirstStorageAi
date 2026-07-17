@@ -44,7 +44,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
     restart: "no"
 
-  # ==================== BACKUP SERVICE ====================
+  # ==================== BACKUP SCHEDULER ====================
   bizfirst-backup-scheduler:
     image: mcuadros/ofelia:latest
     container_name: bizfirst-backup-scheduler
@@ -53,17 +53,103 @@ services:
       - ./ofelia.ini:/etc/ofelia/config.ini:ro
     restart: unless-stopped
 
-  bizfirst-backup-runner:
-    image: restic/restic:latest
-    container_name: bizfirst-backup-runner
+  # ==================== MINIO BACKUP SERVICE ====================
+  bizfirst-backup-minio:
+    image: alpine:latest
+    container_name: bizfirst-backup-minio
     volumes_from:
       - bizfirst-primary
     volumes:
-      - bizfirst-backup-data:/backup
+      - bizfirst-backup-data:/backups
     environment:
-      RESTIC_REPOSITORY: /backup
+      RESTIC_REPOSITORY: s3:http://${MINIO_REPLICA_ENDPOINT:-backup-server}:9000/backups-minio
       RESTIC_PASSWORD: ${RESTIC_PASSWORD:-bizfirst123}
-    entrypoint: ["tail", "-f", "/dev/null"]
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-bizfirst}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+      RESTIC_S3_USE_PATH_STYLE: "true"
+    labels:
+      ofelia: "enabled"
+      ofelia.monitored: "true"
+    entrypoint: >
+      /bin/sh -c "
+      apk add --no-cache restic curl bash;
+      restic init || true;
+      TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
+      echo '[$$TIMESTAMP] MinIO backup started';
+      restic backup /data --tag minio-primary 2>&1 && \
+      restic forget --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --prune 2>&1 && \
+      echo '[✓] MinIO backup complete' || echo '[✗] MinIO backup failed'
+      "
+    restart: unless-stopped
+
+  # ==================== SQL SERVER BACKUP SERVICE ====================
+  bizfirst-backup-sqlserver:
+    image: mcr.microsoft.com/mssql-tools:latest
+    container_name: bizfirst-backup-sqlserver
+    volumes:
+      - bizfirst-backup-data:/backups
+    environment:
+      RESTIC_REPOSITORY: s3:http://${MINIO_REPLICA_ENDPOINT:-backup-server}:9000/backups-sqlserver
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:-bizfirst123}
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-bizfirst}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+      RESTIC_S3_USE_PATH_STYLE: "true"
+      SQLSERVER_HOST: ${SQLSERVER_HOST:-sqlserver}
+      SQLSERVER_PORT: ${SQLSERVER_PORT:-1433}
+      SQLSERVER_SA_PASSWORD: ${SQLSERVER_PASSWORD:-SqlServer@123}
+      SQLSERVER_DB_NAME: ${SQLSERVER_DB_NAME:-master}
+    labels:
+      ofelia: "enabled"
+      ofelia.monitored: "true"
+    entrypoint: >
+      /bin/bash -c "
+      apt-get update && apt-get install -y restic curl 2>/dev/null;
+      restic init || true;
+      TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
+      BACKUP_FILE=/tmp/sqlserver_$${TIMESTAMP}.bak;
+      echo '[$$TIMESTAMP] SQL Server backup started';
+      /opt/mssql-tools/bin/sqlcmd -S $${SQLSERVER_HOST} -U SA -P '$${SQLSERVER_SA_PASSWORD}' -Q \"BACKUP DATABASE [$${SQLSERVER_DB_NAME}] TO DISK='$$BACKUP_FILE'\" && \
+      restic backup $$BACKUP_FILE --tag sqlserver 2>&1 && \
+      restic forget --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --prune 2>&1 && \
+      rm -f $$BACKUP_FILE && \
+      echo '[✓] SQL Server backup complete' || echo '[✗] SQL Server backup failed'
+      "
+    restart: unless-stopped
+
+  # ==================== POSTGRESQL BACKUP SERVICE ====================
+  bizfirst-backup-postgresql:
+    image: alpine:latest
+    container_name: bizfirst-backup-postgresql
+    volumes:
+      - bizfirst-backup-data:/backups
+    environment:
+      RESTIC_REPOSITORY: s3:http://${MINIO_REPLICA_ENDPOINT:-backup-server}:9000/backups-postgresql
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:-bizfirst123}
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-bizfirst}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+      RESTIC_S3_USE_PATH_STYLE: "true"
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB_NAME: ${POSTGRES_DB_NAME:-postgres}
+    labels:
+      ofelia: "enabled"
+      ofelia.monitored: "true"
+    entrypoint: >
+      /bin/sh -c "
+      apk add --no-cache restic postgresql-client curl bash;
+      restic init || true;
+      TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
+      BACKUP_FILE=/tmp/postgres_$${TIMESTAMP}.sql.gz;
+      echo '[$$TIMESTAMP] PostgreSQL backup started';
+      export PGPASSWORD=$${POSTGRES_PASSWORD};
+      pg_dump -h $${POSTGRES_HOST} -p $${POSTGRES_PORT} -U $${POSTGRES_USER} $${POSTGRES_DB_NAME} | gzip > $$BACKUP_FILE && \
+      restic backup $$BACKUP_FILE --tag postgresql 2>&1 && \
+      restic forget --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --prune 2>&1 && \
+      rm -f $$BACKUP_FILE && \
+      echo '[✓] PostgreSQL backup complete' || echo '[✗] PostgreSQL backup failed'
+      "
     restart: unless-stopped
 
   # ==================== HOT STANDBY ====================
@@ -307,3 +393,5 @@ volumes:
     name: bizfirst-pitr-data
   bizfirst-pitr-snapshots:
     name: bizfirst-pitr-snapshots
+  db-dumps:
+    name: db-dumps
