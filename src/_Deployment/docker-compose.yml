@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # ==================== PRIMARY STORAGE ====================
   bizfirst-primary:
@@ -43,6 +41,8 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+    networks:
+      - network_QA
     restart: "no"
 
   # ==================== BACKUP SCHEDULER ====================
@@ -74,12 +74,8 @@ services:
     entrypoint: >
       /bin/sh -c "
       apk add --no-cache restic curl bash;
-      restic init || true;
-      TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
-      echo '[$$TIMESTAMP] MinIO backup started';
-      restic backup /data --tag minio-primary 2>&1 && \
-      restic forget --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --prune 2>&1 && \
-      echo '[✓] MinIO backup complete' || echo '[✗] MinIO backup failed'
+      echo 'MinIO backup tools ready. Waiting for scheduled trigger from Ofelia.';
+      tail -f /dev/null
       "
     restart: unless-stopped
 
@@ -105,15 +101,8 @@ services:
     entrypoint: >
       /bin/bash -c "
       apt-get update && apt-get install -y restic curl 2>/dev/null;
-      restic init || true;
-      TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
-      BACKUP_FILE=/tmp/sqlserver_$${TIMESTAMP}.bak;
-      echo '[$$TIMESTAMP] SQL Server backup started';
-      /opt/mssql-tools/bin/sqlcmd -S $${SQLSERVER_HOST} -U SA -P '$${SQLSERVER_SA_PASSWORD}' -Q \"BACKUP DATABASE [$${SQLSERVER_DB_NAME}] TO DISK='$$BACKUP_FILE'\" && \
-      restic backup $$BACKUP_FILE --tag sqlserver 2>&1 && \
-      restic forget --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --prune 2>&1 && \
-      rm -f $$BACKUP_FILE && \
-      echo '[✓] SQL Server backup complete' || echo '[✗] SQL Server backup failed'
+      echo 'SQL Server backup tools ready. Waiting for scheduled trigger from Ofelia.';
+      tail -f /dev/null
       "
     restart: unless-stopped
 
@@ -140,16 +129,8 @@ services:
     entrypoint: >
       /bin/sh -c "
       apk add --no-cache restic postgresql-client curl bash;
-      restic init || true;
-      TIMESTAMP=$$(date +%Y%m%d_%H%M%S);
-      BACKUP_FILE=/tmp/postgres_$${TIMESTAMP}.sql.gz;
-      echo '[$$TIMESTAMP] PostgreSQL backup started';
-      export PGPASSWORD=$${POSTGRES_PASSWORD};
-      pg_dump -h $${POSTGRES_HOST} -p $${POSTGRES_PORT} -U $${POSTGRES_USER} $${POSTGRES_DB_NAME} | gzip > $$BACKUP_FILE && \
-      restic backup $$BACKUP_FILE --tag postgresql 2>&1 && \
-      restic forget --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --prune 2>&1 && \
-      rm -f $$BACKUP_FILE && \
-      echo '[✓] PostgreSQL backup complete' || echo '[✗] PostgreSQL backup failed'
+      echo 'PostgreSQL backup tools ready. Waiting for scheduled trigger from Ofelia.';
+      tail -f /dev/null
       "
     restart: unless-stopped
 
@@ -182,6 +163,8 @@ services:
     image: minio/mc:latest
     container_name: bizfirst-hotstandby-setup
     depends_on:
+      bizfirst-primary:
+        condition: service_healthy
       bizfirst-hotstandby:
         condition: service_healthy
     entrypoint: >
@@ -214,7 +197,8 @@ services:
       WATCHDOG_INTERVAL: ${WATCHDOG_INTERVAL:-30}
     entrypoint: >
       /bin/sh -c "
-      apk add --no-cache mc curl bash jq;
+      apk add --no-cache curl bash jq;
+      wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc && chmod +x /usr/local/bin/mc;
 
       send_alert() {
         local severity=$$1;
@@ -350,6 +334,8 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+    networks:
+      - network_QA
     restart: "no"
 
   # ==================== COMPLIANCE & RETENTION ====================
@@ -395,6 +381,8 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+    networks:
+      - network_QA
     restart: "no"
 
   # ==================== POINT-IN-TIME RESTORE ====================
@@ -438,6 +426,8 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+    networks:
+      - network_QA
     restart: "no"
 
   bizfirst-pitr-snapshotter:
@@ -476,9 +466,12 @@ services:
       mc ilm tier add minio primary ARCHIVAL-TIER --endpoint http://bizfirst-archival:9000 --access-key $$MINIO_ROOT_USER --secret-key $$MINIO_ROOT_PASSWORD --bucket bizfirst-archive 2>/dev/null || true;
       mc ilm rule add --transition-days 90 --transition-tier ARCHIVAL-TIER primary/bizfirst-files 2>/dev/null || true;
 
-      mc replicate add --remote-bucket http://$$MINIO_ROOT_USER:$$MINIO_ROOT_PASSWORD@bizfirst-compliance:9000/bizfirst-worm --replicate delete-marker,existing-objects,metadata-sync --priority 10 primary/bizfirst-files 2>/dev/null || true;
-
-      mc replicate add --remote-bucket http://$$MINIO_ROOT_USER:$$MINIO_ROOT_PASSWORD@bizfirst-pitr:9000/bizfirst-versioned --replicate existing-objects,metadata-sync --priority 20 primary/bizfirst-files 2>/dev/null || true;
+      mc alias set compliance http://bizfirst-compliance:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc alias set pitr http://bizfirst-pitr:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc version enable compliance/bizfirst-worm 2>/dev/null || true;
+      mc version enable pitr/bizfirst-versioned 2>/dev/null || true;
+      mc replicate add primary/bizfirst-files --remote-bucket compliance/bizfirst-worm --replicate delete-marker,existing-objects,metadata-sync --priority 10 2>/dev/null || true;
+      mc replicate add primary/bizfirst-files --remote-bucket pitr/bizfirst-versioned --replicate existing-objects,metadata-sync --priority 20 2>/dev/null || true;
 
       echo 'Replication ready: primary -> archival (ILM 90d), compliance (WORM mirror), pitr (versioned no-delete)';
       "
@@ -492,9 +485,9 @@ services:
 
 networks:
   network_QA:
-    external: true
+    name: network_QA
   network_Demo:
-    external: true
+    name: network_Demo
 volumes:
   bizfirst-primary-data:
     name: bizfirst-primary-data
