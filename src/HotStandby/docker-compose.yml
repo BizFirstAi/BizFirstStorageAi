@@ -5,7 +5,7 @@ services:
     command: server /data --console-address ":9011"
     ports:
       - "9010:9000"
-      - "9011:9001"
+      - "9011:9011"
     volumes:
       - bizfirst-hotstandby-data:/data
     environment:

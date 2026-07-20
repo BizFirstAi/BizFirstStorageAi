@@ -4,6 +4,9 @@ global:
 scrape_configs:
   - job_name: bizfirst-primary
     metrics_path: /minio/v2/metrics/cluster
+    basic_auth:
+      username: bizfirst
+      password: bizfirst123
     static_configs:
       - targets: ["host.docker.internal:9000"]
 

@@ -205,25 +205,105 @@ services:
   bizfirst-watchdog:
     image: alpine:latest
     container_name: bizfirst-watchdog
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
+      ALERT_WEBHOOK: ${ALERT_WEBHOOK:-}
+      ALERT_EMAIL: ${ALERT_EMAIL:-anishbudidaofficial@gmail.com}
+      REPLICATION_LAG_THRESHOLD: ${REPLICATION_LAG_THRESHOLD:-300}
+      WATCHDOG_INTERVAL: ${WATCHDOG_INTERVAL:-30}
     entrypoint: >
       /bin/sh -c "
-      apk add --no-cache curl;
+      apk add --no-cache mc curl bash jq;
+
+      send_alert() {
+        local severity=$$1;
+        local message=$$2;
+        local timestamp=$$(date -u '+%Y-%m-%dT%H:%M:%SZ');
+
+        if [ -n \"$$ALERT_WEBHOOK\" ]; then
+          payload=\"{\\\"severity\\\":\\\"$$severity\\\",\\\"timestamp\\\":\\\"$$timestamp\\\",\\\"message\\\":\\\"$$message\\\"}\";
+          curl -sf -X POST $$ALERT_WEBHOOK -H 'Content-Type: application/json' -d \"$$payload\" 2>/dev/null || true;
+        fi;
+
+        if [ -n \"$$ALERT_EMAIL\" ]; then
+          echo \"$$timestamp [$$severity] $$message\" | mail -s \"[$$severity] MinIO Watchdog Alert\" $$ALERT_EMAIL 2>/dev/null || true;
+        fi;
+      };
+
+      mc alias set primary http://bizfirst-primary:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc alias set standby http://bizfirst-hotstandby:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc alias set archival http://bizfirst-archival:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc alias set compliance http://bizfirst-compliance:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc alias set pitr http://bizfirst-pitr:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+
       while true; do
         TIMESTAMP=$$(date -u '+%Y-%m-%dT%H:%M:%SZ');
 
+        # Health checks
         PRIMARY=$$(curl -sf --max-time 5 http://bizfirst-primary:9000/minio/health/live && echo OK || echo FAIL);
         STANDBY=$$(curl -sf --max-time 5 http://bizfirst-hotstandby:9000/minio/health/live && echo OK || echo FAIL);
+        ARCHIVAL=$$(curl -sf --max-time 5 http://bizfirst-archival:9000/minio/health/live && echo OK || echo FAIL);
+        COMPLIANCE=$$(curl -sf --max-time 5 http://bizfirst-compliance:9000/minio/health/live && echo OK || echo FAIL);
+        PITR=$$(curl -sf --max-time 5 http://bizfirst-pitr:9000/minio/health/live && echo OK || echo FAIL);
 
-        echo \"$$TIMESTAMP [PRIMARY] $$PRIMARY\";
-        echo \"$$TIMESTAMP [HOTSTANDBY] $$STANDBY\";
+        echo \"$$TIMESTAMP [PRIMARY] $$PRIMARY [STANDBY] $$STANDBY [ARCHIVAL] $$ARCHIVAL [COMPLIANCE] $$COMPLIANCE [PITR] $$PITR\";
 
-        if [ \"$$PRIMARY\" = 'FAIL' ] && [ \"$$STANDBY\" = 'OK' ]; then
-          echo \"$$TIMESTAMP [ALERT] Primary is DOWN. HotStandby is UP. Manual failover required.\";
+        # Replication lag and sync verification
+        PRIMARY_COUNT=$$(mc ls --recursive primary/bizfirst-files 2>/dev/null | wc -l);
+        STANDBY_COUNT=$$(mc ls --recursive standby/bizfirst-files 2>/dev/null | wc -l);
+        ARCHIVAL_COUNT=$$(mc ls --recursive archival/bizfirst-archive 2>/dev/null | wc -l);
+        COMPLIANCE_COUNT=$$(mc ls --recursive compliance/bizfirst-worm 2>/dev/null | wc -l);
+        PITR_COUNT=$$(mc ls --recursive pitr/bizfirst-versioned 2>/dev/null | wc -l);
+
+        # Get replication status if primary is up
+        if [ \"$$PRIMARY\" = 'OK' ]; then
+          REPL_STATUS=$$(mc replicate status primary/bizfirst-files 2>/dev/null);
+          REPL_LAG=$$(echo \"$$REPL_STATUS\" | grep 'Replication lag:' | sed 's/.*Replication lag: *\([0-9]*\).*/\1/' || echo '0');
+          echo \"$$TIMESTAMP [REPLICATION] Primary: $$PRIMARY_COUNT objects | Standby: $$STANDBY_COUNT | Archival: $$ARCHIVAL_COUNT | Compliance: $$COMPLIANCE_COUNT | PITR: $$PITR_COUNT | Lag: \$${REPL_LAG}s\";
+
+          if [ \"$$REPL_LAG\" -gt \"$$REPLICATION_LAG_THRESHOLD\" ]; then
+            send_alert 'WARNING' \"Replication lag detected: \$${REPL_LAG}s (threshold: $$REPLICATION_LAG_THRESHOLD s)\";
+          fi;
         fi;
 
-        sleep 30;
+        # Verify bucket/object sync
+        SYNC_MISMATCH=0;
+        if [ \"$$STANDBY_COUNT\" -ne \"$$PRIMARY_COUNT\" ]; then
+          SYNC_MISMATCH=1;
+          send_alert 'CRITICAL' \"HotStandby sync lag: Primary has $$PRIMARY_COUNT objects, Standby has $$STANDBY_COUNT\";
+        fi;
+
+        if [ \"$$COMPLIANCE_COUNT\" -gt 0 ] && [ \"$$COMPLIANCE_COUNT\" -lt \"$$PRIMARY_COUNT\" ]; then
+          send_alert 'WARNING' \"Compliance sync lag: Primary has $$PRIMARY_COUNT objects, Compliance has $$COMPLIANCE_COUNT\";
+        fi;
+
+        # Critical alerts
+        if [ \"$$PRIMARY\" = 'FAIL' ] && [ \"$$STANDBY\" = 'OK' ]; then
+          send_alert 'CRITICAL' 'Primary is DOWN. HotStandby is UP. Manual failover may be required.';
+        fi;
+
+        if [ \"$$PRIMARY\" = 'FAIL' ] && [ \"$$STANDBY\" = 'FAIL' ]; then
+          send_alert 'CRITICAL' 'Both Primary and HotStandby are DOWN. Immediate action required.';
+        fi;
+
+        sleep $$WATCHDOG_INTERVAL;
       done
       "
+    depends_on:
+      bizfirst-primary:
+        condition: service_healthy
+      bizfirst-hotstandby:
+        condition: service_healthy
+      bizfirst-archival:
+        condition: service_healthy
+      bizfirst-compliance:
+        condition: service_healthy
+      bizfirst-pitr:
+        condition: service_healthy
+    networks:
+      - network_QA
+      - network_Demo
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
