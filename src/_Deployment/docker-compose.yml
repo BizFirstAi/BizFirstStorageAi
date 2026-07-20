@@ -165,6 +165,8 @@ services:
     depends_on:
       bizfirst-primary:
         condition: service_healthy
+      bizfirst-primary-init:
+        condition: service_completed_successfully
       bizfirst-hotstandby:
         condition: service_healthy
     entrypoint: >
