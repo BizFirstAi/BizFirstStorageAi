@@ -3,12 +3,11 @@ global:
 
 scrape_configs:
   - job_name: bizfirst-primary
+    bearer_token: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJwcm9tZXRoZXVzIiwic3ViIjoiYml6Zmlyc3QiLCJleHAiOjQ5MzgyMzYyMTJ9.qpmWIMvq8bAA0A1qQqCMmYuyACKe_4KJvbD3Qjsx9HCMg9Txoy2N1MsHFCjW_CoqOzG0iixULJf7O9xy7HEY4Q
     metrics_path: /minio/v2/metrics/cluster
-    basic_auth:
-      username: bizfirst
-      password: bizfirst123
+    scheme: http
     static_configs:
-      - targets: ["host.docker.internal:9000"]
+    - targets: ['host.docker.internal:9000']
 
   - job_name: bizfirst-hotstandby
     metrics_path: /minio/v2/metrics/cluster
