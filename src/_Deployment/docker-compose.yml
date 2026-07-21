@@ -43,6 +43,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
     networks:
       - network_QA
+      - network_Demo
     restart: "no"
 
   # ==================== BACKUP SCHEDULER ====================
@@ -338,6 +339,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
     networks:
       - network_QA
+      - network_Demo
     restart: "no"
 
   # ==================== COMPLIANCE & RETENTION ====================
@@ -385,6 +387,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
     networks:
       - network_QA
+      - network_Demo
     restart: "no"
 
   # ==================== POINT-IN-TIME RESTORE ====================
@@ -430,6 +433,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
     networks:
       - network_QA
+      - network_Demo
     restart: "no"
 
   bizfirst-pitr-snapshotter:
@@ -488,8 +492,10 @@ services:
 networks:
   network_QA:
     name: network_QA
+    external: true
   network_Demo:
     name: network_Demo
+    external: true
 volumes:
   bizfirst-primary-data:
     name: bizfirst-primary-data
