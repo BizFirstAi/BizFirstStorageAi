@@ -14,7 +14,7 @@
 #
 # USAGE:
 #   .\push-minio.ps1                           # Uses defaults from CONFIGURATION section
-#   .\push-minio.ps1 -FilesToDeploy "docker-compose.minio.yml", "other-file.conf"
+#   .\push-minio.ps1 -FilesToDeploy "docker-compose.yml", "other-file.conf"
 #   .\push-minio.ps1 -RemoteUser "ubuntu" -RemoteHost "15.204.243.180"
 #
 # CONFIGURATION:
@@ -51,8 +51,9 @@ $ProgressPreference = "SilentlyContinue"
 # These can be overridden via the -FilesToDeploy parameter
 if ($FilesToDeploy.Count -eq 0) {
     $FilesToDeploy = @(
-        "docker-compose.minio.yml",
-        "ofelia.ini"
+        "docker-compose.yml",
+        "ofelia.ini",
+        ".env"
     )
 }
 
@@ -258,7 +259,7 @@ foreach ($fileName in $FilesToDeploy) {
 $FileCount = $deployFilePaths.Count
 $FolderSize = 0
 foreach ($file in $deployFilePaths) {
-    $FolderSize += (Get-Item $file).Length
+    $FolderSize += (Get-Item -Path "$file" -Force).Length
 }
 $FolderSizeMB = [math]::Round($FolderSize / 1MB, 2)
 
@@ -426,23 +427,23 @@ if (-not $SkipRestart) {
     Write-Host "[7] Managing Docker containers..." -ForegroundColor Yellow
     try {
         # Check if containers are running
-        $containerStatus = Invoke-RemoteCommand -Command "cd '$RemoteBasePath' && docker compose -f docker-compose.minio.yml ps 2>/dev/null | grep -c 'running' || echo '0'"
+        $containerStatus = Invoke-RemoteCommand -Command "cd '$RemoteBasePath' && docker compose -f docker-compose.yml ps 2>/dev/null | grep -c 'running' || echo '0'"
         $runningCount = $containerStatus -as [int]
 
         if ($runningCount -gt 0) {
             Write-Host "  [INFO] Found $runningCount running containers, restarting..." -ForegroundColor Cyan
-            Invoke-RemoteCommand -Command "cd '$RemoteBasePath' && docker compose -f docker-compose.minio.yml restart" | Out-Null
+            Invoke-RemoteCommand -Command "cd '$RemoteBasePath' && docker compose -f docker-compose.yml restart" | Out-Null
             Write-Host "  [OK] Containers restarted successfully" -ForegroundColor Green
         } else {
             Write-Host "  [INFO] No running containers found, starting them..." -ForegroundColor Cyan
-            Invoke-RemoteCommand -Command "cd '$RemoteBasePath' && docker compose -f docker-compose.minio.yml up -d" | Out-Null
+            Invoke-RemoteCommand -Command "cd '$RemoteBasePath' && docker compose -f docker-compose.yml up -d" | Out-Null
             Write-Host "  [OK] Containers started successfully" -ForegroundColor Green
         }
 
         # Show container status
         Write-Host ""
         Write-Host "  Container status:" -ForegroundColor Gray
-        $status = Invoke-RemoteCommand -Command "cd '$RemoteBasePath' && docker compose -f docker-compose.minio.yml ps"
+        $status = Invoke-RemoteCommand -Command "cd '$RemoteBasePath' && docker compose -f docker-compose.yml ps"
         foreach ($line in $status) {
             Write-Host "    $line" -ForegroundColor Gray
         }
@@ -450,7 +451,7 @@ if (-not $SkipRestart) {
         Write-Host "  [ERROR] Failed to manage docker containers" -ForegroundColor Red
         Write-Host "    Error: $($_.Exception.Message)" -ForegroundColor Red
         Write-Host "    Run manually: ssh $RemoteUser@$RemoteHost" -ForegroundColor Yellow
-        Write-Host "    Then: cd $RemoteBasePath && docker compose -f docker-compose.minio.yml up -d" -ForegroundColor Yellow
+        Write-Host "    Then: cd $RemoteBasePath && docker compose -f docker-compose.yml up -d" -ForegroundColor Yellow
         exit 1
     }
 }
@@ -478,8 +479,8 @@ Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Yellow
 Write-Host "  1. SSH to the server: ssh $RemoteUser@$RemoteHost" -ForegroundColor Gray
 Write-Host "  2. Navigate to MinIO directory: cd $RemoteBasePath" -ForegroundColor Gray
-Write-Host "  3. Check container status: docker compose -f docker-compose.minio.yml ps" -ForegroundColor Gray
-Write-Host "  4. View logs: docker compose -f docker-compose.minio.yml logs -f" -ForegroundColor Gray
+Write-Host "  3. Check container status: docker compose -f docker-compose.yml ps" -ForegroundColor Gray
+Write-Host "  4. View logs: docker compose -f docker-compose.yml logs -f" -ForegroundColor Gray
 Write-Host "  5. Access MinIO Console:" -ForegroundColor Gray
 Write-Host "     - Primary: http://$RemoteHost:9001" -ForegroundColor Gray
 Write-Host "     - HotStandby: http://$RemoteHost:9011" -ForegroundColor Gray
@@ -489,5 +490,5 @@ Write-Host "     - PITR: http://$RemoteHost:9041" -ForegroundColor Gray
 Write-Host ""
 Write-Host "If you need to restore from backup:" -ForegroundColor Yellow
 Write-Host "  rm -rf $RemoteBasePath && cp -r $BackupDir $RemoteBasePath" -ForegroundColor Gray
-Write-Host "  cd $RemoteBasePath && docker compose -f docker-compose.minio.yml up -d" -ForegroundColor Gray
+Write-Host "  cd $RemoteBasePath && docker compose -f docker-compose.yml up -d" -ForegroundColor Gray
 Write-Host ""
