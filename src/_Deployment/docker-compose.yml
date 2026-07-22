@@ -196,8 +196,8 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
       ALERT_WEBHOOK: ${ALERT_WEBHOOK:-}
       ALERT_EMAIL: ${ALERT_EMAIL:-anishbudidaofficial@gmail.com}
-      REPLICATION_LAG_THRESHOLD: ${REPLICATION_LAG_THRESHOLD:-300}
-      WATCHDOG_INTERVAL: ${WATCHDOG_INTERVAL:-30}
+      REPLICATION_LAG_THRESHOLD: 300
+      WATCHDOG_INTERVAL: 30
     entrypoint: >
       /bin/sh -c "
       apk add --no-cache curl bash jq;
