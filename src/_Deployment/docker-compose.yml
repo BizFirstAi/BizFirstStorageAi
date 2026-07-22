@@ -195,7 +195,7 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bizfirst}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-bizfirst123}
       ALERT_WEBHOOK: ${ALERT_WEBHOOK:-}
-      ALERT_EMAIL: ${ALERT_EMAIL:-anishbudidaofficial@gmail.com}
+      ALERT_EMAIL: ${ALERT_EMAIL:-}
       REPLICATION_LAG_THRESHOLD: 300
       WATCHDOG_INTERVAL: 30
     entrypoint: >
