@@ -482,11 +482,12 @@ Write-Host "  2. Navigate to MinIO directory: cd $RemoteBasePath" -ForegroundCol
 Write-Host "  3. Check container status: docker compose -f docker-compose.yml ps" -ForegroundColor Gray
 Write-Host "  4. View logs: docker compose -f docker-compose.yml logs -f" -ForegroundColor Gray
 Write-Host "  5. Access MinIO Console:" -ForegroundColor Gray
-Write-Host "     - Primary: http://$RemoteHost:9001" -ForegroundColor Gray
-Write-Host "     - HotStandby: http://$RemoteHost:9011" -ForegroundColor Gray
-Write-Host "     - Archival: http://$RemoteHost:9021" -ForegroundColor Gray
-Write-Host "     - Compliance: http://$RemoteHost:9031" -ForegroundColor Gray
-Write-Host "     - PITR: http://$RemoteHost:9041" -ForegroundColor Gray
+Write-Host "     - Primary: http://<server-ip>:9001" -ForegroundColor Gray
+Write-Host "     - Bakcup: http://<server-ip>:9006" -ForegroundColor Gray
+Write-Host "     - HotStandby: http://<server-ip>:9011" -ForegroundColor Gray
+Write-Host "     - Archival: http://<server-ip>:9021" -ForegroundColor Gray
+Write-Host "     - Compliance: http://<server-ip>:9031" -ForegroundColor Gray
+Write-Host "     - PITR: http://<server-ip>:9041" -ForegroundColor Gray
 Write-Host ""
 Write-Host "If you need to restore from backup:" -ForegroundColor Yellow
 Write-Host "  rm -rf $RemoteBasePath && cp -r $BackupDir $RemoteBasePath" -ForegroundColor Gray

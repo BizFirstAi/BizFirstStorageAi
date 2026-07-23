@@ -119,11 +119,15 @@ services:
       - bizfirst-storage-server-primary
     volumes:
       - bizfirst-backup-data:/backups
+      - ./backup-minio.sh:/usr/local/bin/backup-minio.sh:ro
+    networks:
+      - network_QA
+      - network_Demo
     depends_on:
       bizfirst-storage-server-backup-init:
         condition: service_completed_successfully
     environment:
-      RESTIC_REPOSITORY: s3:http://${MINIO_BACKUP_ENDPOINT:-bizfirst-storage-server-backup}/backups-minio
+      RESTIC_REPOSITORY: s3:${MINIO_BACKUP_ENDPOINT-http://bizfirst-storage-server-backup:9000}/backups-minio
       RESTIC_PASSWORD: ${RESTIC_PASSWORD:-bizfirst123}
       AWS_ACCESS_KEY_ID: ${MINIO_BACKUP_USER:-bizfirst-backup}
       AWS_SECRET_ACCESS_KEY: ${MINIO_BACKUP_PASSWORD:-bizfirst-backup123}
@@ -145,11 +149,16 @@ services:
     container_name: bizfirst-storage-server-backup-sqlserver
     volumes:
       - bizfirst-backup-data:/backups
+      - ./backup-sqlserver.sh:/usr/local/bin/backup-sqlserver.sh:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - network_QA
+      - network_Demo
     depends_on:
       bizfirst-storage-server-backup-init:
         condition: service_completed_successfully
     environment:
-      RESTIC_REPOSITORY: s3:http://${MINIO_BACKUP_ENDPOINT:-bizfirst-storage-server-backup}:9000/backups-sqlserver
+      RESTIC_REPOSITORY: s3:${MINIO_BACKUP_ENDPOINT-http://bizfirst-storage-server-backup:9000}/backups-sqlserver
       RESTIC_PASSWORD: ${RESTIC_PASSWORD:-bizfirst123}
       AWS_ACCESS_KEY_ID: ${MINIO_BACKUP_USER:-bizfirst-backup}
       AWS_SECRET_ACCESS_KEY: ${MINIO_BACKUP_PASSWORD:-bizfirst-backup123}
@@ -162,9 +171,12 @@ services:
       ofelia: "enabled"
       ofelia.monitored: "true"
     entrypoint: >
-      /bin/bash -c "
-      apt-get update && apt-get install -y restic curl 2>/dev/null;
-      echo 'SQL Server backup tools ready. Waiting for scheduled trigger from Ofelia.';
+      /bin/sh -c "
+      apt-get update && apt-get install -y wget bzip2;
+      wget -q https://github.com/restic/restic/releases/download/v0.16.0/restic_0.16.0_linux_amd64.bz2 -O /tmp/restic.bz2 && bunzip2 /tmp/restic.bz2 && chmod +x /tmp/restic && mv /tmp/restic /usr/local/bin/restic;
+      wget -q https://download.docker.com/linux/static/stable/x86_64/docker-27.0.0.tgz -O /tmp/docker.tgz && cd /tmp && tar xzf docker.tgz && chmod +x docker/docker && mv docker/docker /usr/local/bin/docker && rm -rf /tmp/docker* /tmp/docker.tgz;
+      restic init 2>/dev/null || true;
+      echo 'SQL Server backup tools ready (Docker CLI installed). Waiting for scheduled trigger from Ofelia.';
       tail -f /dev/null
       "
     restart: unless-stopped
@@ -175,11 +187,15 @@ services:
     container_name: bizfirst-storage-server-backup-postgresql
     volumes:
       - bizfirst-backup-data:/backups
+      - ./backup-postgres.sh:/usr/local/bin/backup-postgres.sh:ro
+    networks:
+      - network_QA
+      - network_Demo
     depends_on:
       bizfirst-storage-server-backup-init:
         condition: service_completed_successfully
     environment:
-      RESTIC_REPOSITORY: s3:http://${MINIO_BACKUP_ENDPOINT:-bizfirst-storage-server-backup}:9000/backups-postgresql
+      RESTIC_REPOSITORY: s3:${MINIO_BACKUP_ENDPOINT:-http://bizfirst-storage-server-backup:9000}/backups-postgresql
       RESTIC_PASSWORD: ${RESTIC_PASSWORD:-bizfirst123}
       AWS_ACCESS_KEY_ID: ${MINIO_BACKUP_USER:-bizfirst-backup}
       AWS_SECRET_ACCESS_KEY: ${MINIO_BACKUP_PASSWORD:-bizfirst-backup123}
