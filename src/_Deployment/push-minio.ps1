@@ -53,7 +53,11 @@ if ($FilesToDeploy.Count -eq 0) {
     $FilesToDeploy = @(
         "docker-compose.yml",
         "ofelia.ini",
-        ".env"
+        ".env",
+        "backup-minio.sh",
+        "backup-postgres.sh",
+        "backup-sqlserver.sh",
+        "generate-prometheus-tokens.sh"
     )
 }
 
