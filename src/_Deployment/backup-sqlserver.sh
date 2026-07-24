@@ -1,18 +1,29 @@
 #!/bin/sh
-restic init 2>/dev/null || true
+set -e
+
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_FILE=/tmp/sqlserver_${TIMESTAMP}.bak
-LOCAL_BACKUP=/backups/sqlserver_${TIMESTAMP}.bak
+SQL_CONTAINER="container-sql-express"
+SQL_BACKUP_PATH="/tmp/bizfirst_sqlserver_backup.bak"
+LOCAL_BACKUP="/backups/sqlserver_${TIMESTAMP}.bak"
 
-/opt/mssql-tools/bin/sqlcmd -S $SQLSERVER_HOST -U SA -P "$SQLSERVER_SA_PASSWORD" -Q "BACKUP DATABASE [$SQLSERVER_DB_NAME] TO DISK='$BACKUP_FILE'"
+restic init 2>/dev/null || true
 
-docker cp container-sql-express:${BACKUP_FILE} ${LOCAL_BACKUP}
+# trigger SQL Server to write backup to its own /tmp
+SQLCMD_BIN="/opt/mssql-tools18/bin/sqlcmd"
+[ -f "$SQLCMD_BIN" ] || SQLCMD_BIN="/opt/mssql-tools/bin/sqlcmd"
 
-if [ -f "$LOCAL_BACKUP" ]; then
-  restic backup $LOCAL_BACKUP --tag sqlserver
-  restic forget --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --prune
-  rm -f $LOCAL_BACKUP
-else
-  echo "Error: Backup file not found at $LOCAL_BACKUP"
+"$SQLCMD_BIN" -S "$SQLSERVER_HOST" -U SA -P "$SQLSERVER_SA_PASSWORD" -No \
+  -Q "BACKUP DATABASE [$SQLSERVER_DB_NAME] TO DISK=N'$SQL_BACKUP_PATH' WITH FORMAT, INIT, COMPRESSION, STATS=10"
+
+# copy from SQL Server container to shared /backups volume
+docker cp "$SQL_CONTAINER:$SQL_BACKUP_PATH" "$LOCAL_BACKUP"
+
+if [ ! -f "$LOCAL_BACKUP" ]; then
+  echo "backup file not found at $LOCAL_BACKUP"
   exit 1
 fi
+
+restic backup "$LOCAL_BACKUP" --tag sqlserver
+restic forget --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --prune
+rm -f "$LOCAL_BACKUP"
+echo "sql server backup done: $TIMESTAMP"
