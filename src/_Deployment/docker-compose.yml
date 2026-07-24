@@ -172,13 +172,18 @@ services:
       ofelia.monitored: "true"
     entrypoint: >
       /bin/sh -c "
+      set -e &&
       chmod 777 /backups &&
       apt-get update -qq && apt-get install -y -qq wget bzip2 &&
-      wget -q https://github.com/restic/restic/releases/download/v0.16.0/restic_0.16.0_linux_amd64.bz2 -O /tmp/restic.bz2 &&
+      echo 'Installing restic...' &&
+      wget https://github.com/restic/restic/releases/download/v0.16.0/restic_0.16.0_linux_amd64.bz2 -O /tmp/restic.bz2 &&
       bunzip2 /tmp/restic.bz2 && chmod +x /tmp/restic && mv /tmp/restic /usr/local/bin/restic &&
-      wget -q https://download.docker.com/linux/static/stable/x86_64/docker-27.0.0.tgz -O /tmp/docker.tgz &&
+      echo 'Restic installed successfully' &&
+      echo 'Installing docker CLI...' &&
+      wget https://download.docker.com/linux/static/stable/x86_64/docker-26.1.4.tgz -O /tmp/docker.tgz &&
       tar xzf /tmp/docker.tgz -C /tmp/ && chmod +x /tmp/docker/docker && mv /tmp/docker/docker /usr/local/bin/docker &&
       rm -rf /tmp/docker /tmp/docker.tgz &&
+      echo 'Docker CLI installed successfully' &&
       restic init 2>/dev/null || true &&
       echo 'sql server backup container ready' &&
       tail -f /dev/null
